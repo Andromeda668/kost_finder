@@ -1,0 +1,99 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Booking;
+use App\Models\Kost;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
+
+class BookingController extends Controller
+{
+    public function index(Request $request): View
+    {
+        $bookings = $request->user()
+            ->bookings()
+            ->with(['kost.primaryImage', 'kost.room', 'kost.owner.ownerContact'])
+            ->latest('created_at')
+            ->paginate(10);
+
+        return view('bookings.index', [
+            'bookings' => $bookings,
+        ]);
+    }
+
+    public function create(Kost $kost): View
+    {
+        $kost->load(['owner.ownerContact', 'room', 'primaryImage']);
+
+        abort_if(auth()->user()?->isOwner() && auth()->id() === $kost->user_id, 403, 'Owner tidak bisa membooking kost miliknya sendiri.');
+
+        return view('bookings.create', [
+            'kost' => $kost,
+        ]);
+    }
+
+    public function store(Request $request, Kost $kost): RedirectResponse
+    {
+        abort_if($request->user()->isOwner() && $request->user()->id === $kost->user_id, 403, 'Owner tidak bisa membooking kost miliknya sendiri.');
+
+        $validated = $request->validate([
+            'tanggal_masuk' => ['required', 'date', 'after_or_equal:today'],
+            'durasi_bulan' => ['required', 'integer', 'min:1', 'max:24'],
+        ], [
+            'tanggal_masuk.required' => 'Tanggal masuk wajib diisi.',
+            'tanggal_masuk.after_or_equal' => 'Tanggal masuk tidak boleh sebelum hari ini.',
+            'durasi_bulan.required' => 'Durasi sewa wajib diisi.',
+            'durasi_bulan.min' => 'Durasi minimal 1 bulan.',
+            'durasi_bulan.max' => 'Durasi maksimal 24 bulan.',
+        ]);
+
+        if (($kost->room?->kamar_tersedia ?? 0) < 1) {
+            return back()->withInput()->with('status', 'Maaf, kost ini sedang penuh dan belum bisa dibooking.');
+        }
+
+        Booking::query()->create([
+            'user_id' => $request->user()->id,
+            'kost_id' => $kost->id,
+            'tanggal_masuk' => $validated['tanggal_masuk'],
+            'durasi_bulan' => (int) $validated['durasi_bulan'],
+            'status' => Booking::STATUS_PENDING,
+            'created_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('kosts.show', $kost)
+            ->with('status', 'Booking berhasil dikirim. Owner akan meninjau permintaan Anda.');
+    }
+
+    public function updateStatus(Request $request, Booking $booking): RedirectResponse
+    {
+        abort_unless($booking->kost->user_id === $request->user()->id, 403, 'Anda tidak berhak mengelola booking ini.');
+
+        $validated = $request->validate([
+            'status' => ['required', 'in:diterima,ditolak'],
+        ]);
+
+        if ($booking->status !== Booking::STATUS_PENDING) {
+            return back()->with('status', 'Booking ini sudah diproses sebelumnya.');
+        }
+
+        DB::transaction(function () use ($booking, $validated): void {
+            $booking->loadMissing('kost.room');
+            $room = $booking->kost->room;
+
+            if ($validated['status'] === Booking::STATUS_ACCEPTED) {
+                abort_if(! $room || $room->kamar_tersedia < 1, 422, 'Kamar tidak tersedia untuk booking ini.');
+                $room->decrement('kamar_tersedia');
+            }
+
+            $booking->update([
+                'status' => $validated['status'],
+            ]);
+        });
+
+        return back()->with('status', 'Status booking berhasil diperbarui.');
+    }
+}
