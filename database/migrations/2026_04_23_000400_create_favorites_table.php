@@ -1,4 +1,4 @@
-<?php
+Jika ingin, saya bisa tambahkan ringkasan SQL tersebut ke dalam format laporan tabel per tabel.<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

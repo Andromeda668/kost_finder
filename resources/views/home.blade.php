@@ -3,116 +3,166 @@
 @section('title', 'KostFinder - Cari kost terbaik untuk hidup nyaman')
 
 @section('content')
+    @php
+        $priceOptions = [
+            '100000' => '< Rp 100.000',
+            '500000' => '< Rp 500.000',
+            '1000000' => '< Rp 1.000.000',
+        ];
+        $selectedMaxPrice = $maxPrice ? (string) preg_replace('/\D+/', '', (string) $maxPrice) : '';
+    @endphp
+
     <section class="travel-hero" data-reveal>
-        <div class="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+        <div class="mb-10 grid gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
             <div>
-                <p class="eyebrow">Platform Booking Kost</p>
+                <p class="eyebrow">PLATFORM BOOKING KOST</p>
                 <h1 class="font-display text-4xl font-semibold leading-tight text-[var(--ink)] sm:text-5xl lg:text-6xl">
-                    Cari kost terbaik untuk hidup nyaman
+                    Temukan kost impian, booking dalam hitungan menit
                 </h1>
-                <p class="mt-5 max-w-2xl text-base leading-8 text-[var(--muted)] sm:text-lg">
-                    Temukan kost dengan informasi kamar yang jelas, alur booking cepat, dan kontak owner langsung dalam satu pengalaman yang rapi seperti platform travel modern.
+                <p class="mt-6 text-lg leading-8 text-[var(--muted)]">
+                    Jelajahi ribuan pilihan kost dengan informasi lengkap, cek ketersediaan kamar secara real-time,
+                    dan hubungi owner langsung dalam satu platform yang nyaman dipakai.
                 </p>
 
-                <div class="mt-7 flex flex-wrap gap-3">
-                    <span class="mini-pill">Booking mudah</span>
-                    <span class="mini-pill">Status kamar real-time</span>
-                    <span class="mini-pill">Chat owner langsung</span>
+                <div class="mt-8 grid gap-4 sm:grid-cols-3">
+                    <div class="rounded-2xl border border-[var(--line)] bg-white p-4">
+                        <p class="text-xs uppercase tracking-[0.2em] text-[var(--terracotta-deep)]">Proses Cepat</p>
+                        <p class="mt-2 text-sm font-medium text-[var(--ink)]">Cari, lihat, lalu booking</p>
+                        <p class="mt-1 text-xs text-[var(--muted)]">Hanya 3 langkah mudah</p>
+                    </div>
+                    <div class="rounded-2xl border border-[var(--line)] bg-white p-4">
+                        <p class="text-xs uppercase tracking-[0.2em] text-[var(--accent)]">Data Lengkap</p>
+                        <p class="mt-2 text-sm font-medium text-[var(--ink)]">Foto, harga, fasilitas</p>
+                        <p class="mt-1 text-xs text-[var(--muted)]">Semua informasi tersedia</p>
+                    </div>
+                    <div class="rounded-2xl border border-[var(--line)] bg-white p-4">
+                        <p class="text-xs uppercase tracking-[0.2em] text-[var(--ink)]">{{ $kosts->total() }} Kost</p>
+                        <p class="mt-2 text-sm font-medium text-[var(--terracotta-deep)]">Tersedia</p>
+                        <p class="mt-1 text-xs text-[var(--muted)]">Di berbagai kota</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="hero-stat-grid">
-                <article class="hero-stat-card">
-                    <p class="hero-stat-label">Total hasil</p>
-                    <p class="hero-stat-value">{{ $kosts->total() }}</p>
-                    <p class="hero-stat-copy">Pilihan kost tampil sesuai pencarian Anda.</p>
-                </article>
-                <article class="hero-stat-card hero-stat-card-accent">
-                    <p class="hero-stat-label">Flow booking</p>
-                    <p class="hero-stat-value">Search → Detail → Booking</p>
-                    <p class="hero-stat-copy">Dibuat ringkas supaya user cepat mengambil keputusan.</p>
-                </article>
+            <div class="rounded-[32px] border border-[var(--line)] bg-gradient-to-br from-white via-white to-[var(--surface-muted)] p-8 shadow-[0_8px_30px_rgba(61,51,43,0.05)]">
+                <p class="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Bagaimana cara kerjanya?</p>
+                <div class="mt-6 space-y-6">
+                    <div class="flex gap-4">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--terracotta)] text-sm font-bold text-white">1</div>
+                        <div>
+                            <p class="font-semibold text-[var(--ink)]">Cari Kost</p>
+                            <p class="mt-1 text-sm text-[var(--muted)]">Pilih lokasi dan budget yang paling pas</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-bold text-white">2</div>
+                        <div>
+                            <p class="font-semibold text-[var(--ink)]">Lihat Detail</p>
+                            <p class="mt-1 text-sm text-[var(--muted)]">Bandingkan foto, harga, dan fasilitas</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--terracotta)] text-sm font-bold text-white">3</div>
+                        <div>
+                            <p class="font-semibold text-[var(--ink)]">Booking Langsung</p>
+                            <p class="mt-1 text-sm text-[var(--muted)]">Ajukan permintaan ke owner tanpa ribet</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <form action="{{ route('home') }}" method="GET" class="search-surface" data-search-form>
-            <div class="search-field search-field-icon">
-                <span class="search-icon">⌖</span>
-                <label class="field-group">
-                    <span>Lokasi</span>
-                    <select
-                        name="search"
-                        class="field-input field-input-plain"
-                        data-location-select
-                        data-placeholder="Semua kota/kabupaten"
-                        data-selected="{{ $search }}"
-                    >
-                        <option value="">{{ $search ?: 'Memuat daftar lokasi...' }}</option>
-                    </select>
-                </label>
+        <form action="{{ route('home') }}" method="GET" class="rounded-[32px] border border-[var(--line)] bg-white p-6 shadow-[0_8px_30px_rgba(61,51,43,0.05)] lg:p-8" data-search-form>
+            <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">Cari Kost Sekarang</p>
+                    <p class="mt-2 text-sm text-[var(--muted)]">Filter lokasi, budget, dan urutan hasil dalam satu panel.</p>
+                </div>
+                <div class="hidden rounded-full bg-[var(--surface-muted)] px-4 py-2 text-sm font-semibold text-[var(--terracotta-deep)] md:inline-flex">
+                    {{ $kosts->total() }} hasil aktif
+                </div>
             </div>
 
-            <div class="search-field">
-                <label class="field-group">
-                    <span>Harga maksimal</span>
-                    <input type="number" name="max_price" value="{{ $maxPrice }}" min="0" placeholder="Contoh 1500000" class="field-input field-input-plain">
-                </label>
-            </div>
+            <div class="grid gap-4 lg:grid-cols-[2fr_1.5fr_1.5fr_auto]">
+                <div>
+                    <label class="field-group">
+                        <span>Pilih Lokasi</span>
+                        <select
+                            name="search"
+                            class="field-input field-input-plain"
+                            data-location-select
+                            data-placeholder="Semua kota/kabupaten"
+                            data-selected="{{ $search }}"
+                        >
+                            <option value="">{{ $search ?: 'Semua Lokasi' }}</option>
+                        </select>
+                    </label>
+                </div>
 
-            <div class="search-field">
-                <label class="field-group">
-                    <span>Urutkan</span>
-                    <select name="sort" class="field-input field-input-plain">
-                        <option value="latest" @selected($sort === 'latest')>Terbaru</option>
-                        <option value="price_asc" @selected($sort === 'price_asc')>Harga termurah</option>
-                        <option value="price_desc" @selected($sort === 'price_desc')>Harga tertinggi</option>
-                        <option value="availability" @selected($sort === 'availability')>Kamar tersedia terbanyak</option>
-                    </select>
-                </label>
-            </div>
+                <div>
+                    <label class="field-group">
+                        <span>Harga Maksimal (Rp)</span>
+                        <select name="max_price" class="field-input field-input-plain">
+                            <option value="">Semua Harga</option>
+                            @foreach ($priceOptions as $value => $label)
+                                <option value="{{ $value }}" @selected($selectedMaxPrice === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                </div>
 
-            <button type="submit" class="search-submit">
-                Cari
-            </button>
+                <div>
+                    <label class="field-group">
+                        <span>Urutkan Hasil</span>
+                        <select name="sort" class="field-input field-input-plain">
+                            <option value="latest" @selected($sort === 'latest')>Terbaru</option>
+                            <option value="price_asc" @selected($sort === 'price_asc')>Harga Terendah</option>
+                            <option value="price_desc" @selected($sort === 'price_desc')>Harga Tertinggi</option>
+                            <option value="availability" @selected($sort === 'availability')>Kamar Tersedia</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="flex items-end">
+                    <button type="submit" class="solid-button w-full lg:w-auto">Cari Sekarang</button>
+                </div>
+            </div>
         </form>
     </section>
 
-    @if ($quickLocations->isNotEmpty())
-        <section class="mt-8" data-reveal>
-            <div class="flex flex-wrap items-center gap-3">
-                <span class="text-sm font-semibold text-[var(--muted)]">Filter lokasi cepat:</span>
+    <section class="mt-12" data-reveal>
+        <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <p class="text-sm uppercase tracking-[0.2em] text-[var(--terracotta-deep)]">HASIL PENCARIAN</p>
+                <h2 class="mt-2 font-display text-3xl font-semibold">{{ $search ? 'Kost di '.$search : 'Semua Pilihan Kost' }}</h2>
+                <p class="mt-2 text-sm text-[var(--muted)]">{{ $kosts->total() }} kost ditemukan</p>
+            </div>
+
+            @if ($search || $maxPrice || $activeQuickLocation || $sort !== 'latest')
+                <a href="{{ route('home') }}" class="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold transition hover:bg-[var(--surface-muted)]">
+                    Reset Filter
+                </a>
+            @endif
+        </div>
+
+        @if ($quickLocations->isNotEmpty())
+            <div class="mb-6 flex flex-wrap gap-2">
+                <span class="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Filter cepat:</span>
                 @foreach ($quickLocations as $location)
                     <a
                         href="{{ route('home', ['quick_location' => $location, 'sort' => $sort]) }}"
-                        class="quick-filter-chip {{ $activeQuickLocation === $location ? 'quick-filter-chip-active' : '' }}"
+                        class="inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium transition {{ $activeQuickLocation === $location ? 'border-[var(--terracotta)] bg-[var(--terracotta)] text-white' : 'border-[var(--line)] hover:border-[var(--terracotta)]' }}"
                     >
                         {{ $location }}
                     </a>
                 @endforeach
-                @if ($activeQuickLocation)
-                    <a href="{{ route('home', ['sort' => $sort]) }}" class="quick-filter-reset">Reset</a>
-                @endif
             </div>
-        </section>
-    @endif
-
-    <section class="mt-10" data-reveal>
-        <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
-            <div>
-                <p class="eyebrow">Hasil Pencarian</p>
-                <h2 class="font-display text-3xl font-semibold">Pilihan Kost Tersedia</h2>
-            </div>
-
-            @if ($search || $maxPrice || $activeQuickLocation || $sort !== 'latest')
-                <a href="{{ route('home') }}" class="text-sm font-semibold text-[var(--terracotta-deep)]">Reset semua filter</a>
-            @endif
-        </div>
+        @endif
 
         @if ($kosts->count())
             <div class="space-y-5" data-loading-region>
                 @foreach ($kosts as $kost)
                     @php
-                        $image = $kost->primaryImage?->image_path ? asset('storage/'.$kost->primaryImage->image_path) : null;
+                        $image = $kost->primaryImage?->image_url;
                         $facilities = collect(preg_split('/\r\n|\r|\n/', $kost->fasilitas) ?: [])->filter()->take(3);
                         $isFavorited = (bool) ($kost->is_favorited ?? false);
                     @endphp
@@ -131,53 +181,55 @@
                         <div class="search-result-main">
                             <div class="flex flex-wrap items-start justify-between gap-4">
                                 <div>
-                                    <p class="search-result-location">{{ $kost->lokasi }}</p>
-                                    <h3 class="font-display text-3xl font-semibold">{{ $kost->nama_kost }}</h3>
-                                    <p class="mt-3 text-sm leading-7 text-[var(--muted)]">{{ \Illuminate\Support\Str::limit($kost->alamat, 92) }}</p>
+                                    <p class="search-result-location">Lokasi: {{ $kost->lokasi }}</p>
+                                    <h3 class="mt-2 font-display text-2xl font-semibold">{{ $kost->nama_kost }}</h3>
+                                    <p class="mt-2 text-sm leading-6 text-[var(--muted)]">{{ \Illuminate\Support\Str::limit($kost->alamat, 100) }}</p>
                                 </div>
 
                                 @auth
                                     @if (! auth()->user()->isOwner())
                                         <form action="{{ route('favorites.toggle', $kost) }}" method="POST">
                                             @csrf
-                                            <button type="submit" class="wishlist-button {{ $isFavorited ? 'wishlist-button-active' : '' }}">
-                                                {{ $isFavorited ? 'Tersimpan' : 'Wishlist' }}
+                                            <button type="submit" class="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition {{ $isFavorited ? 'border-[var(--terracotta)] bg-[var(--terracotta)] text-white' : 'border-[var(--line)] text-[var(--ink)] hover:border-[var(--terracotta)]' }}">
+                                                {{ $isFavorited ? 'Tersimpan' : 'Tambah ke Wishlist' }}
                                             </button>
                                         </form>
                                     @endif
                                 @endauth
                             </div>
 
-                            <div class="mt-5 flex flex-wrap items-center gap-3">
+                            <div class="mt-4 flex flex-wrap items-center gap-3">
                                 <span class="{{ $kost->availability_badge_class }}">{{ $kost->availability_status }}</span>
-                                <span class="mini-meta">{{ $kost->room?->kamar_tersedia ?? 0 }} / {{ $kost->room?->total_kamar ?? 0 }} kamar tersedia</span>
+                                <span class="inline-flex items-center gap-1 text-sm text-[var(--muted)]">
+                                    {{ $kost->room?->kamar_tersedia ?? 0 }} / {{ $kost->room?->total_kamar ?? 0 }} kamar
+                                </span>
                             </div>
 
-                            <div class="mt-5 flex flex-wrap gap-3">
+                            <div class="mt-4 flex flex-wrap gap-2">
                                 @foreach ($facilities as $facility)
-                                    <span class="feature-chip">{{ trim($facility) }}</span>
+                                    <span class="inline-flex items-center rounded-full bg-[var(--surface-muted)] px-3 py-1 text-sm text-[var(--muted)]">{{ trim($facility) }}</span>
                                 @endforeach
                             </div>
 
-                            <p class="mt-5 line-clamp-2 text-sm leading-7 text-[var(--muted)]">{{ $kost->deskripsi }}</p>
+                            <p class="mt-4 line-clamp-2 text-sm leading-6 text-[var(--muted)]">{{ $kost->deskripsi }}</p>
                         </div>
 
                         <div class="search-result-side">
                             <div>
-                                <p class="text-sm font-medium text-[var(--muted)]">Mulai dari</p>
-                                <p class="search-result-price">Rp {{ number_format($kost->harga, 0, ',', '.') }}</p>
-                                <p class="text-sm text-[var(--muted)]">per bulan</p>
+                                <p class="text-xs uppercase tracking-[0.15em] text-[var(--muted)]">Harga</p>
+                                <p class="mt-2 text-2xl font-semibold text-[var(--terracotta-deep)]">Rp {{ number_format($kost->harga, 0, ',', '.') }}</p>
+                                <p class="text-xs text-[var(--muted)]">per bulan</p>
                             </div>
 
-                            <div class="space-y-3">
-                                <a href="{{ route('kosts.show', $kost) }}" class="solid-button w-full text-center">
+                            <div class="space-y-2">
+                                <a href="{{ route('kosts.show', $kost) }}" class="solid-button block w-full text-center">
                                     Lihat Detail
                                 </a>
 
                                 @auth
                                     @if (! auth()->user()->isOwner())
-                                        <a href="{{ route('bookings.create', $kost) }}" class="ghost-button w-full text-center">
-                                            Booking Cepat
+                                        <a href="{{ route('bookings.create', $kost) }}" class="ghost-button block w-full text-center">
+                                            Booking Sekarang
                                         </a>
                                     @endif
                                 @endauth
@@ -187,13 +239,15 @@
                 @endforeach
             </div>
 
-            <div class="mt-8">
+            <div class="mt-10">
                 {{ $kosts->links() }}
             </div>
         @else
             <div class="empty-state">
-                <h3 class="font-display text-2xl font-semibold">Belum ada hasil yang cocok</h3>
-                <p class="mt-3 text-[var(--muted)]">Ubah lokasi, batas harga, atau urutan hasil untuk menemukan kost yang lebih sesuai.</p>
+                <div class="mb-4 text-6xl">...</div>
+                <h3 class="font-display text-2xl font-semibold">Belum ada kost yang cocok</h3>
+                <p class="mx-auto mt-3 max-w-md text-[var(--muted)]">Coba ubah lokasi, perluas budget, atau lihat semua kost untuk menemukan pilihan yang tepat.</p>
+                <a href="{{ route('home') }}" class="solid-button mt-6 inline-flex">Lihat Semua Kost</a>
             </div>
         @endif
     </section>

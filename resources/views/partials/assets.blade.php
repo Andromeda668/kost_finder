@@ -54,8 +54,65 @@
             box-shadow: 0 8px 30px rgba(61, 51, 43, 0.05);
             backdrop-filter: blur(8px);
         }
+        .travel-hero,
+        .search-result-card,
+        .page-heading,
+        .content-card,
+        .booking-sticky-card,
+        .dashboard-table-card,
+        .gallery-shell,
+        .owner-hero {
+            border: 1px solid var(--line);
+            border-radius: 32px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 30px rgba(61, 51, 43, 0.05);
+        }
         .hero-card, .form-card, .detail-panel, .owner-card, .empty-state { padding: 1.5rem; }
         .kost-card { padding: 1rem; }
+        .travel-hero, .page-heading, .content-card, .booking-sticky-card, .dashboard-table-card, .gallery-shell, .owner-hero { padding: 1.5rem; }
+        .page-shell { min-height: 100vh; }
+        .detail-layout, .owner-dashboard-shell, .dashboard-grid, .owner-hero-copy, .owner-quick-list { display: grid; gap: 1.5rem; }
+        .table-shell { overflow-x: auto; }
+        .dashboard-table { min-width: 100%; border-collapse: separate; border-spacing: 0 .75rem; font-size: .875rem; }
+        .dashboard-table th { padding: 0 1rem .5rem; text-align: left; font-size: .75rem; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+        .dashboard-table td { padding: 1rem; background: var(--surface-muted); color: var(--ink); vertical-align: top; }
+        .dashboard-section-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+        .dashboard-section-title, .owner-hero-heading { font-size: 2rem; font-weight: 600; line-height: 1.15; }
+        .dashboard-section-copy, .owner-hero-text { color: var(--muted); line-height: 1.7; }
+        .owner-hero { background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(249,252,254,.96)); }
+        .owner-hero-strip { display: grid; gap: .75rem; }
+        .owner-hero-stat, .owner-quick-card { border-radius: 24px; border: 1px solid rgba(195,106,78,.12); padding: 1rem; background: linear-gradient(180deg, #fff, #f9fbfc); }
+        .owner-hero-stat-warm { border-color: rgba(245, 158, 11, .18); background: linear-gradient(180deg, #fffdf7, #fff6e5); }
+        .owner-hero-stat-muted { border-color: rgba(24, 49, 83, .08); background: linear-gradient(180deg, #fff, #f5f8fc); }
+        .owner-hero-stat-label { font-size: .75rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+        .owner-hero-stat-value { margin-top: .5rem; font-size: 1.875rem; font-weight: 700; color: var(--ink); }
+        .owner-hero-stat-copy { margin-top: .5rem; color: var(--muted); line-height: 1.6; font-size: .875rem; }
+        .owner-quick-item { display: flex; gap: .75rem; border-radius: 20px; background: rgba(255,255,255,.85); padding: 1rem; }
+        .owner-quick-icon, .facility-icon { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 999px; font-size: .75rem; font-weight: 700; }
+        .owner-quick-icon { background: rgba(195,106,78,.12); color: var(--terracotta-deep); }
+        .gallery-main-image { width: 100%; height: 330px; object-fit: cover; border-radius: 28px; }
+        .gallery-thumbs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-top: 1rem; }
+        .gallery-thumb { height: 6rem; border-radius: 20px; overflow: hidden; border: 2px solid transparent; cursor: pointer; }
+        .gallery-thumb-active { border-color: rgba(195,106,78,.35); }
+        .facility-grid { display: grid; gap: .75rem; margin-top: 1.25rem; }
+        .facility-tile { display: flex; align-items: center; gap: .75rem; border-radius: 22px; background: var(--surface-muted); padding: 1rem; }
+        .facility-icon { background: rgba(106,122,82,.16); color: var(--olive); }
+        .status-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: .55rem 1rem; font-size: .875rem; font-weight: 600; }
+        .status-available { background: rgba(106,122,82,.14); color: #4d6d55; }
+        .status-limited { background: rgba(228,182,87,.18); color: #93691a; }
+        .status-full { background: rgba(209,91,91,.16); color: #a44747; }
+        .mini-meta { font-size: .875rem; color: var(--muted); }
+        .map-embed-shell { overflow: hidden; border-radius: 28px; border: 1px solid var(--line); background: var(--surface-muted); }
+        .map-embed-frame { width: 100%; height: 320px; border: 0; }
+        .contact-action { display: inline-flex; align-items: center; justify-content: center; border-radius: 24px; padding: 1rem 1.25rem; font-size: .875rem; font-weight: 600; }
+        .contact-action-wa { background: #e8f6eb; color: #2b7d48; }
+        .contact-action-email { background: #fff3eb; color: var(--terracotta-deep); }
+        .contact-action-map { background: #f4f1ed; color: var(--ink); }
+        .table-kost-title { display: flex; flex-direction: column; gap: .25rem; }
+        .table-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+        .table-link { display: inline-flex; align-items: center; border-radius: 999px; padding: .5rem 1rem; font-size: .875rem; font-weight: 600; color: var(--ink); }
+        .table-link-success { color: var(--olive); }
+        .table-link-danger { color: #b74e4e; }
         .eyebrow {
             color: var(--terracotta-deep);
             font-size: .75rem;
@@ -137,5 +194,138 @@
             font-weight: 700;
         }
         .price-box span { margin-left: .5rem; color: var(--muted); font-size: .875rem; font-weight: 500; }
+        .solid-button, .ghost-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            padding: .95rem 1.5rem;
+            font-size: .875rem;
+            font-weight: 600;
+            transition: .2s ease;
+        }
+        .solid-button {
+            background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+            box-shadow: 0 18px 40px rgba(195, 106, 78, .18);
+            color: #fff;
+        }
+        .ghost-button {
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--ink);
+        }
+        .search-result-card {
+            display: grid;
+            gap: 1.25rem;
+            padding: 1rem;
+            overflow: hidden;
+        }
+        .search-result-media {
+            overflow: hidden;
+            border-radius: 26px;
+            background: var(--surface-muted);
+            min-height: 220px;
+        }
+        .search-result-main {
+            padding: .25rem 0;
+        }
+        .search-result-side {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 1.25rem;
+            border-radius: 26px;
+            background: var(--surface-muted);
+            padding: 1.25rem;
+        }
+        .search-result-location {
+            color: var(--olive);
+            font-size: .875rem;
+            font-weight: 600;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+        }
+        @media (min-width: 1024px) {
+            .detail-layout {
+                grid-template-columns: minmax(0, 1fr) 360px;
+            }
+            .search-result-card {
+                grid-template-columns: 280px minmax(0, 1fr) 220px;
+                padding: 1.25rem;
+            }
+            .owner-hero {
+                grid-template-columns: minmax(0, 1.3fr) 340px;
+                align-items: start;
+            }
+            .owner-hero-strip {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+            .sticky-panel {
+                position: sticky;
+                top: 6rem;
+                align-self: start;
+            }
+            .travel-hero {
+                padding: 2rem;
+            }
+        }
     </style>
+    <script>
+        function formatCurrency(input) {
+            let value = input.value.replace(/[^\d]/g, '');
+            value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            input.value = value ? 'Rp ' + value : '';
+        }
+
+        function cleanCurrency(input) {
+            return input.value.replace(/[^\d]/g, '');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.classList.add('app-ready');
+
+            const menuToggle = document.querySelector('[data-menu-toggle]');
+            const mobileMenu = document.querySelector('[data-mobile-menu]');
+            if (menuToggle && mobileMenu) {
+                menuToggle.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+
+            const mainImage = document.querySelector('[data-gallery-main]');
+            const thumbs = document.querySelectorAll('[data-gallery-thumb]');
+            thumbs.forEach(function(thumb) {
+                thumb.addEventListener('click', function() {
+                    if (mainImage && thumb.dataset.image) {
+                        mainImage.src = thumb.dataset.image;
+                    }
+                    thumbs.forEach(function(item) {
+                        item.classList.remove('gallery-thumb-active');
+                    });
+                    thumb.classList.add('gallery-thumb-active');
+                });
+            });
+
+            // Format on input for price fields
+            document.querySelectorAll('input[name="harga"], input[name="max_price"]').forEach(function(input) {
+                input.addEventListener('input', function() {
+                    formatCurrency(input);
+                });
+            });
+
+            // Initial format for existing values
+            document.querySelectorAll('input[name="harga"], input[name="max_price"]').forEach(function(input) {
+                if (input.value) {
+                    formatCurrency(input);
+                }
+            });
+
+            // Clean on submit
+            document.querySelectorAll('input[name="harga"], input[name="max_price"]').forEach(function(input) {
+                input.form?.addEventListener('submit', function() {
+                    input.value = cleanCurrency(input);
+                });
+            });
+        });
+    </script>
 @endif

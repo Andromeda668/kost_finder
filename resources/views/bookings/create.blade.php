@@ -4,7 +4,7 @@
 
 @section('content')
     @php
-        $image = $kost->primaryImage?->image_path ? asset('storage/'.$kost->primaryImage->image_path) : null;
+        $image = $kost->primaryImage?->image_url;
     @endphp
 
     <section class="page-heading" data-reveal>

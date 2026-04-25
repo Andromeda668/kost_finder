@@ -5,7 +5,7 @@
 @section('content')
     @php
         $images = $kost->images->count() ? $kost->images : collect([$kost->primaryImage])->filter();
-        $gallery = $images->map(fn ($item) => $item?->image_path ? asset('storage/'.$item->image_path) : null)->filter()->values();
+        $gallery = $images->map(fn ($item) => $item?->image_url)->filter()->values();
         $heroImage = $gallery->first();
         $contact = $kost->owner?->ownerContact;
         $ownerEmail = $contact?->email ?? $kost->owner?->email;
@@ -60,7 +60,7 @@
                 <div class="facility-grid">
                     @foreach ($facilities as $facility)
                         <div class="facility-tile">
-                            <span class="facility-icon">✓</span>
+                            <span class="facility-icon">OK</span>
                             <span>{{ trim($facility) }}</span>
                         </div>
                     @endforeach

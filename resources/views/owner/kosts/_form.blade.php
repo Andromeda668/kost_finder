@@ -47,7 +47,7 @@
 
     <label class="field-group">
         <span>Harga Sewa</span>
-        <input type="number" name="harga" value="{{ old('harga', $kost->harga) }}" class="field-input" min="0" required>
+        <input type="text" id="harga-input" name="harga" value="{{ old('harga', $kost->harga ? 'Rp ' . number_format($kost->harga, 0, ',', '.') : '') }}" class="field-input" placeholder="Rp 1.000.000" required>
         @error('harga')
             <small class="field-error">{{ $message }}</small>
         @enderror

@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('kost_images', function (Blueprint $table) {
             $table->id();
             $table->foreignId('kost_id')->constrained()->cascadeOnDelete();
-            $table->string('image_path');
+            $table->string('image_path');            
         });
     }
 

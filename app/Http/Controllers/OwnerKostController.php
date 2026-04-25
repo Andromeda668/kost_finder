@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Room;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -20,6 +21,18 @@ class OwnerKostController extends Controller
             ->latest()
             ->paginate(10);
 
+        $totalKosts = $request->user()->kosts()->count();
+
+        $roomSummary = Room::query()
+            ->whereHas('kost', fn ($query) => $query->where('user_id', $request->user()->id))
+            ->selectRaw('SUM(total_kamar) as total_kamar, SUM(kamar_tersedia) as kamar_tersedia')
+            ->first();
+
+        $pendingBookings = Booking::query()
+            ->whereHas('kost', fn ($query) => $query->where('user_id', $request->user()->id))
+            ->where('status', Booking::STATUS_PENDING)
+            ->count();
+
         $bookings = Booking::query()
             ->with(['user', 'kost.primaryImage'])
             ->whereHas('kost', fn ($query) => $query->where('user_id', $request->user()->id))
@@ -29,6 +42,10 @@ class OwnerKostController extends Controller
         return view('owner.kosts.index', [
             'kosts' => $kosts,
             'bookings' => $bookings,
+            'totalKosts' => $totalKosts,
+            'availableRooms' => $roomSummary->kamar_tersedia ?? 0,
+            'totalRooms' => $roomSummary->total_kamar ?? 0,
+            'pendingBookings' => $pendingBookings,
         ]);
     }
 
@@ -43,24 +60,28 @@ class OwnerKostController extends Controller
     {
         $validated = $this->validateKost($request, true);
 
-        $kost = $request->user()->kosts()->create($this->kostPayload($validated));
+        DB::transaction(function () use ($request, $validated) {
+            $kost = $request->user()->kosts()->create($this->kostPayload($validated));
 
-        $request->user()->ownerContact()->updateOrCreate(
-            ['user_id' => $request->user()->id],
-            [
-                'phone' => $validated['phone'],
-                'email' => $validated['contact_email'],
-            ]
-        );
+            $request->user()->ownerContact()->updateOrCreate(
+                ['user_id' => $request->user()->id],
+                [
+                    'phone' => $validated['phone'],
+                    'email' => $validated['contact_email'],
+                ]
+            );
 
-        $kost->images()->create([
-            'image_path' => $validated['image']->store('kosts', 'public'),
-        ]);
+            $kost->images()->create([
+                'image_data' => base64_encode(file_get_contents($validated['image']->getRealPath())),
+                'mime_type' => $validated['image']->getMimeType(),
+                'image_path' => null,
+            ]);
 
-        $kost->room()->create([
-            'total_kamar' => (int) $validated['total_kamar'],
-            'kamar_tersedia' => (int) $validated['kamar_tersedia'],
-        ]);
+            $kost->room()->create([
+                'total_kamar' => (int) $validated['total_kamar'],
+                'kamar_tersedia' => (int) $validated['kamar_tersedia'],
+            ]);
+        });
 
         return redirect()
             ->route('owner.kosts.index')
@@ -104,13 +125,18 @@ class OwnerKostController extends Controller
         if (isset($validated['image'])) {
             $oldImage = $kost->primaryImage;
 
-            if ($oldImage?->image_path) {
-                Storage::disk('public')->delete($oldImage->image_path);
+            if ($oldImage) {
+                if ($oldImage->image_path) {
+                    Storage::disk('public')->delete($oldImage->image_path);
+                }
+
                 $oldImage->delete();
             }
 
             $kost->images()->create([
-                'image_path' => $validated['image']->store('kosts', 'public'),
+                'image_data' => base64_encode(file_get_contents($validated['image']->getRealPath())),
+                'mime_type' => $validated['image']->getMimeType(),
+                'image_path' => null,
             ]);
         }
 
@@ -143,14 +169,14 @@ class OwnerKostController extends Controller
             'alamat' => ['required', 'string'],
             'lokasi' => ['required', 'string', 'max:255'],
             'google_maps_link' => ['required', 'url', 'max:1000'],
-            'harga' => ['required', 'numeric', 'min:0'],
+            'harga' => ['required', 'string', 'regex:/^Rp [\d\.]+$/', 'min:3'],
             'deskripsi' => ['required', 'string'],
             'fasilitas' => ['required', 'string'],
             'total_kamar' => ['required', 'integer', 'min:1', 'max:500'],
             'kamar_tersedia' => ['required', 'integer', 'min:0', 'lte:total_kamar'],
             'phone' => ['required', 'string', 'max:30'],
             'contact_email' => ['required', 'email', 'max:255'],
-            'image' => [$imageRequired ? 'required' : 'nullable', 'image', 'max:3072'],
+            'image' => [$imageRequired ? 'required' : 'nullable', 'image', 'max:2048'],
         ], [
             'nama_kost.required' => 'Nama kost wajib diisi.',
             'alamat.required' => 'Alamat wajib diisi.',
@@ -158,7 +184,8 @@ class OwnerKostController extends Controller
             'google_maps_link.required' => 'Link Google Maps wajib diisi.',
             'google_maps_link.url' => 'Link Google Maps harus berupa URL yang valid.',
             'harga.required' => 'Harga sewa wajib diisi.',
-            'harga.numeric' => 'Harga sewa harus berupa angka.',
+            'harga.regex' => 'Format harga tidak valid (contoh: Rp 1.000.000).',
+            'harga.min' => 'Harga sewa minimal Rp 100.',
             'deskripsi.required' => 'Deskripsi wajib diisi.',
             'fasilitas.required' => 'Fasilitas wajib diisi.',
             'total_kamar.required' => 'Total kamar wajib diisi.',
@@ -170,7 +197,7 @@ class OwnerKostController extends Controller
             'contact_email.email' => 'Email owner tidak valid.',
             'image.required' => 'Foto kost wajib diunggah.',
             'image.image' => 'File foto harus berupa gambar.',
-            'image.max' => 'Ukuran foto maksimal 3 MB.',
+            'image.max' => 'Ukuran foto maksimal 2 MB.',
         ]);
     }
 
@@ -181,7 +208,7 @@ class OwnerKostController extends Controller
             'alamat' => $validated['alamat'],
             'lokasi' => $validated['lokasi'],
             'google_maps_link' => $validated['google_maps_link'],
-            'harga' => (int) $validated['harga'],
+            'harga' => (int) str_replace(['Rp ', '.'], '', $validated['harga']),
             'deskripsi' => $validated['deskripsi'],
             'fasilitas' => $validated['fasilitas'],
         ];

@@ -14,7 +14,7 @@
     <section class="mt-8 grid gap-4">
         @forelse ($bookings as $booking)
             @php
-                $image = $booking->kost->primaryImage?->image_path ? asset('storage/'.$booking->kost->primaryImage->image_path) : null;
+                $image = $booking->kost->primaryImage?->image_url;
                 $ownerContact = $booking->kost->owner?->ownerContact;
                 $ownerEmail = $ownerContact?->email ?? $booking->kost->owner?->email;
             @endphp

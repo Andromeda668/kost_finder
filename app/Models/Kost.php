@@ -84,7 +84,16 @@ class Kost extends Model
 
     public function scopeMaxPrice(Builder $query, int|string|null $maxPrice): Builder
     {
-        if (! $maxPrice || ! is_numeric($maxPrice)) {
+        if (! $maxPrice) {
+            return $query;
+        }
+
+        // Parse if it's a formatted string like "Rp 1.000.000"
+        if (is_string($maxPrice) && str_starts_with($maxPrice, 'Rp ')) {
+            $maxPrice = str_replace(['Rp ', '.'], '', $maxPrice);
+        }
+
+        if (! is_numeric($maxPrice)) {
             return $query;
         }
 

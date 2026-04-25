@@ -84,7 +84,8 @@ class KostFinderTest extends TestCase
         $response = $this->actingAs($owner)->get(route('owner.kosts.index'));
 
         $response->assertOk();
-        $response->assertSee('Kelola kost dan booking masuk');
+        $response->assertSee('Dashboard Owner');
+        $response->assertSee('Daftar kost Anda');
     }
 
     public function test_regular_user_cannot_access_owner_dashboard(): void

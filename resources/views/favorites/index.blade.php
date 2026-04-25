@@ -12,7 +12,7 @@
     <section class="mt-8 space-y-5">
         @forelse ($favorites as $kost)
             @php
-                $image = $kost->primaryImage?->image_path ? asset('storage/'.$kost->primaryImage->image_path) : null;
+                $image = $kost->primaryImage?->image_url;
             @endphp
 
             <article class="search-result-card" data-reveal>
