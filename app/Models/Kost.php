@@ -153,4 +153,58 @@ class Kost extends Model
 
         return 'https://www.google.com/maps?q='.rawurlencode($target).'&output=embed';
     }
+
+    public function getDisplayImageUrlAttribute(): ?string
+    {
+        $uploadedImage = $this->primaryImage?->image_url;
+
+        return $uploadedImage ?: $this->google_street_view_image_url;
+    }
+
+    public function getGoogleStreetViewImageUrlAttribute(): ?string
+    {
+        $apiKey = config('services.google_maps.key');
+
+        if (! $apiKey) {
+            return null;
+        }
+
+        $location = $this->google_maps_location_query;
+
+        if (! $location) {
+            return null;
+        }
+
+        return 'https://maps.googleapis.com/maps/api/streetview?'.http_build_query([
+            'size' => '900x520',
+            'location' => $location,
+            'fov' => 80,
+            'pitch' => 0,
+            'key' => $apiKey,
+        ]);
+    }
+
+    public function getGoogleMapsLocationQueryAttribute(): string
+    {
+        $parsedUrl = parse_url($this->google_maps_link);
+        $query = [];
+
+        if (isset($parsedUrl['query'])) {
+            parse_str($parsedUrl['query'], $query);
+        }
+
+        if (! empty($query['q'])) {
+            return (string) $query['q'];
+        }
+
+        if (! empty($query['query'])) {
+            return (string) $query['query'];
+        }
+
+        if (isset($parsedUrl['path']) && preg_match('/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/', $parsedUrl['path'], $matches)) {
+            return $matches[1].','.$matches[2];
+        }
+
+        return trim($this->alamat.' '.$this->lokasi);
+    }
 }

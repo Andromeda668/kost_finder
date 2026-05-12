@@ -9,13 +9,28 @@
     @include('partials.assets')
 </head>
 <body class="min-h-screen bg-[var(--background)] text-[var(--text)]">
+    @php
+        $flashMessage = session('error') ?? session('status');
+        $flashText = is_string($flashMessage) ? strtolower($flashMessage) : '';
+        $flashIsError = session('error')
+            || $errors->any()
+            || str_contains($flashText, 'gagal')
+            || str_contains($flashText, 'maaf')
+            || str_contains($flashText, 'penuh')
+            || str_contains($flashText, 'sudah diproses');
+    @endphp
+
     <div class="page-shell">
         @include('partials.navbar')
 
         <main class="mx-auto w-full max-w-7xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
-            @if (session('status'))
-                <div class="mb-6 rounded-3xl border border-[var(--line)] bg-white/80 px-5 py-4 text-sm text-[var(--ink)] shadow-sm">
-                    {{ session('status') }}
+            @if ($flashMessage || $errors->any())
+                <div class="flash-toast {{ $flashIsError ? 'flash-toast-error' : 'flash-toast-success' }}" data-flash-message role="status" aria-live="polite">
+                    <div class="flash-toast-icon">{{ $flashIsError ? '!' : 'OK' }}</div>
+                    <div>
+                        <p class="flash-toast-title">{{ $flashIsError ? 'Gagal' : 'Berhasil' }}</p>
+                        <p class="flash-toast-text">{{ $flashMessage ?: 'Periksa kembali data yang diisi.' }}</p>
+                    </div>
                 </div>
             @endif
 

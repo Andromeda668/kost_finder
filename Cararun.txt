@@ -1,12 +1,14 @@
+1. Jalankan:
+
 composer install
 copy .env.example .env
 php artisan key:generate
 php artisan migrate
 npm install
-npm run dev
+npm run build
 php artisan serve
 
-
-
-
-
+Catatan:
+- Kalau sudah punya .env, tidak perlu copy .env.example lagi.
+- Konfigurasi lokal sekarang pakai SQLite: database/database.sqlite.
+- Tidak perlu menyalakan MySQL XAMPP untuk menjalankan halaman home.

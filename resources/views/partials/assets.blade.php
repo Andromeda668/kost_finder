@@ -90,9 +90,17 @@
         .owner-quick-item { display: flex; gap: .75rem; border-radius: 20px; background: rgba(255,255,255,.85); padding: 1rem; }
         .owner-quick-icon, .facility-icon { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 999px; font-size: .75rem; font-weight: 700; }
         .owner-quick-icon { background: rgba(195,106,78,.12); color: var(--terracotta-deep); }
+        .gallery-main-wrap { position: relative; overflow: hidden; border-radius: 28px; }
         .gallery-main-image { width: 100%; height: 330px; object-fit: cover; border-radius: 28px; }
-        .gallery-thumbs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-top: 1rem; }
-        .gallery-thumb { height: 6rem; border-radius: 20px; overflow: hidden; border: 2px solid transparent; cursor: pointer; }
+        .gallery-nav-button { position: absolute; top: 50%; transform: translateY(-50%); display: flex; width: 2.75rem; height: 2.75rem; align-items: center; justify-content: center; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,.9); color: var(--ink); font-size: 1.875rem; font-weight: 600; line-height: 1; box-shadow: 0 10px 24px rgba(61,51,43,.12); transition: background .2s ease; }
+        .gallery-nav-button:hover { background: #fff; }
+        .gallery-nav-prev { left: .75rem; }
+        .gallery-nav-next { right: .75rem; }
+        .gallery-thumbs { display: flex; gap: .75rem; margin-top: 1rem; padding-bottom: .5rem; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: rgba(196,106,74,.45) transparent; }
+        .gallery-thumbs::-webkit-scrollbar { height: 8px; }
+        .gallery-thumbs::-webkit-scrollbar-track { background: transparent; }
+        .gallery-thumbs::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(196,106,74,.45); }
+        .gallery-thumb { flex: 0 0 auto; width: calc((100% - 2.25rem) / 4); min-width: 11rem; height: 6rem; border-radius: 20px; overflow: hidden; border: 2px solid transparent; cursor: pointer; }
         .gallery-thumb-active { border-color: rgba(195,106,78,.35); }
         .facility-grid { display: grid; gap: .75rem; margin-top: 1.25rem; }
         .facility-tile { display: flex; align-items: center; gap: .75rem; border-radius: 22px; background: var(--surface-muted); padding: 1rem; }
@@ -161,6 +169,56 @@
             color: var(--ink);
             font-size: .875rem;
             font-weight: 600;
+        }
+        .home-search-panel.is-submitting {
+            transform: translateY(-2px);
+            border-color: rgba(15,118,110,.26);
+            box-shadow: 0 34px 80px rgba(15,23,42,.13);
+        }
+        .home-search-button { position: relative; }
+        .home-search-panel.is-submitting .home-search-button {
+            color: transparent;
+            pointer-events: none;
+        }
+        .home-search-panel.is-submitting .home-search-button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 1.15rem;
+            height: 1.15rem;
+            margin: -.575rem 0 0 -.575rem;
+            border-radius: 999px;
+            border: 2px solid rgba(255,255,255,.45);
+            border-top-color: #fff;
+            animation: spin .75s linear infinite;
+        }
+        [data-search-results].is-loading {
+            opacity: .82;
+            transition: opacity .25s ease;
+        }
+        [data-loading-region].is-loading .home-kost-card,
+        [data-loading-region].is-loading .search-result-card {
+            position: relative;
+            overflow: hidden;
+            opacity: .72;
+            transform: translateY(2px);
+            transition: opacity .25s ease, transform .25s ease;
+        }
+        [data-loading-region].is-loading .home-kost-card::after,
+        [data-loading-region].is-loading .search-result-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.65), transparent);
+            animation: shimmer 1s linear infinite;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
         .nav-link, .mobile-link {
             color: var(--ink);
@@ -294,17 +352,76 @@
 
             const mainImage = document.querySelector('[data-gallery-main]');
             const thumbs = document.querySelectorAll('[data-gallery-thumb]');
-            thumbs.forEach(function(thumb) {
+            const prevButton = document.querySelector('[data-gallery-prev]');
+            const nextButton = document.querySelector('[data-gallery-next]');
+            let activeIndex = Array.from(thumbs).findIndex(function(thumb) {
+                return thumb.classList.contains('gallery-thumb-active');
+            });
+            activeIndex = activeIndex >= 0 ? activeIndex : 0;
+
+            function setActiveImage(index) {
+                if (!mainImage || !thumbs.length) {
+                    return;
+                }
+
+                activeIndex = (index + thumbs.length) % thumbs.length;
+                const activeThumb = thumbs[activeIndex];
+
+                if (activeThumb.dataset.image) {
+                    mainImage.src = activeThumb.dataset.image;
+                }
+
+                thumbs.forEach(function(item) {
+                    item.classList.remove('gallery-thumb-active');
+                });
+                activeThumb.classList.add('gallery-thumb-active');
+            }
+
+            thumbs.forEach(function(thumb, index) {
                 thumb.addEventListener('click', function() {
-                    if (mainImage && thumb.dataset.image) {
-                        mainImage.src = thumb.dataset.image;
-                    }
-                    thumbs.forEach(function(item) {
-                        item.classList.remove('gallery-thumb-active');
-                    });
-                    thumb.classList.add('gallery-thumb-active');
+                    setActiveImage(index);
                 });
             });
+
+            if (prevButton) {
+                prevButton.addEventListener('click', function() {
+                    setActiveImage(activeIndex - 1);
+                });
+            }
+
+            if (nextButton) {
+                nextButton.addEventListener('click', function() {
+                    setActiveImage(activeIndex + 1);
+                });
+            }
+
+            const searchForm = document.querySelector('[data-search-form]');
+            const loadingRegion = document.querySelector('[data-loading-region]') || document.querySelector('[data-search-results]');
+            const resultsRegion = document.querySelector('[data-search-results]');
+
+            if (searchForm) {
+                const query = new URLSearchParams(window.location.search);
+                const shouldFocusResults = sessionStorage.getItem('kostFinderSearchSubmitted') === '1'
+                    || ['search', 'quick_location', 'max_price', 'sort'].some(function(key) {
+                        return query.has(key) && query.get(key);
+                    });
+
+                if (resultsRegion && shouldFocusResults) {
+                    sessionStorage.removeItem('kostFinderSearchSubmitted');
+                    window.setTimeout(function() {
+                        resultsRegion.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 160);
+                }
+
+                searchForm.addEventListener('submit', function() {
+                    sessionStorage.setItem('kostFinderSearchSubmitted', '1');
+                    searchForm.classList.add('is-submitting');
+                    searchForm.setAttribute('aria-busy', 'true');
+                    if (loadingRegion) {
+                        loadingRegion.classList.add('is-loading');
+                    }
+                });
+            }
 
             // Format on input for price fields
             document.querySelectorAll('input[name="harga"], input[name="max_price"]').forEach(function(input) {

@@ -3,6 +3,11 @@
 @section('title', 'Dashboard Owner - KostFinder')
 
 @section('content')
+    @php
+        $occupiedRooms = max($totalRooms - $availableRooms, 0);
+        $occupancyRate = $totalRooms > 0 ? min(100, (int) round(($occupiedRooms / $totalRooms) * 100)) : 0;
+    @endphp
+
     <div class="owner-dashboard-shell">
         <section class="owner-dashboard-showcase" data-reveal>
             <div class="owner-showcase-media">
@@ -39,23 +44,16 @@
                     </article>
                 </div>
 
-                <div class="owner-showcase-note">
-                    <p class="owner-showcase-note-label">Aksi cepat</p>
-                    <div class="owner-showcase-note-list">
-                        <div class="owner-showcase-note-item">
-                            <span class="owner-showcase-note-icon">01</span>
-                            <div>
-                                <p class="font-semibold text-[var(--ink)]">Tambah listing baru</p>
-                                <p class="mt-1 text-sm leading-6 text-[var(--muted)]">Masukkan kost baru dengan detail yang lengkap dan siap tampil.</p>
-                            </div>
+                <div class="owner-panel-meter">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="owner-panel-meter-label">Okupansi kamar</p>
+                            <p class="owner-panel-meter-copy">{{ $occupiedRooms }} kamar terisi dari {{ $totalRooms }} total kamar.</p>
                         </div>
-                        <div class="owner-showcase-note-item">
-                            <span class="owner-showcase-note-icon">02</span>
-                            <div>
-                                <p class="font-semibold text-[var(--ink)]">Tinjau booking masuk</p>
-                                <p class="mt-1 text-sm leading-6 text-[var(--muted)]">Prioritaskan booking pending agar calon penyewa mendapat respons cepat.</p>
-                            </div>
-                        </div>
+                        <span class="owner-panel-meter-value">{{ $occupancyRate }}%</span>
+                    </div>
+                    <div class="owner-panel-meter-track" aria-hidden="true">
+                        <span style="width: {{ $occupancyRate }}%"></span>
                     </div>
                 </div>
             </div>
@@ -87,9 +85,18 @@
                             @forelse ($kosts as $kost)
                                 <tr>
                                     <td>
-                                        <div class="table-kost-title">
-                                            <span class="font-semibold text-[var(--ink)]">{{ $kost->nama_kost }}</span>
-                                            <span class="text-xs text-[var(--muted)]">{{ $kost->lokasi }}</span>
+                                        <div class="table-kost-cell">
+                                            @if ($kost->display_image_url)
+                                                <img src="{{ $kost->display_image_url }}" alt="{{ $kost->nama_kost }}" class="table-kost-image">
+                                            @else
+                                                <div class="table-kost-image placeholder-cover">
+                                                    <span>Foto</span>
+                                                </div>
+                                            @endif
+                                            <div class="table-kost-title">
+                                                <span class="font-semibold text-[var(--ink)]">{{ $kost->nama_kost }}</span>
+                                                <span class="text-xs text-[var(--muted)]">{{ $kost->lokasi }}</span>
+                                            </div>
                                         </div>
                                     </td>
                                     <td>Rp {{ number_format($kost->harga, 0, ',', '.') }}</td>

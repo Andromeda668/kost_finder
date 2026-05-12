@@ -12,22 +12,36 @@
         @enderror
     </label>
 
-    <label class="field-group">
-        <span>Lokasi / Kota / Kabupaten</span>
-        <select
-            name="lokasi"
-            class="field-input"
-            data-location-select
-            data-placeholder="Pilih kota / kabupaten"
-            data-selected="{{ old('lokasi', $kost->lokasi) }}"
-            required
-        >
-            <option value="">{{ old('lokasi', $kost->lokasi) ?: 'Memuat daftar lokasi...' }}</option>
-        </select>
-        @error('lokasi')
-            <small class="field-error">{{ $message }}</small>
-        @enderror
-    </label>
+    <div class="grid gap-5 md:col-span-2 md:grid-cols-2" data-location-group>
+        <label class="field-group">
+            <span>Provinsi</span>
+            <select
+                class="field-input"
+                data-location-province-select
+                data-placeholder="Pilih provinsi"
+                required
+            >
+                <option value="">Memuat provinsi...</option>
+            </select>
+        </label>
+
+        <label class="field-group">
+            <span>Kota / Kabupaten</span>
+            <select
+                name="lokasi"
+                class="field-input"
+                data-location-select
+                data-placeholder="Pilih kota / kabupaten"
+                data-selected="{{ old('lokasi', $kost->lokasi) }}"
+                required
+            >
+                <option value="">{{ old('lokasi', $kost->lokasi) ?: 'Pilih kota / kabupaten' }}</option>
+            </select>
+            @error('lokasi')
+                <small class="field-error">{{ $message }}</small>
+            @enderror
+        </label>
+    </div>
 
     <label class="field-group md:col-span-2">
         <span>Alamat Lengkap</span>
@@ -102,9 +116,13 @@
     </label>
 
     <label class="field-group md:col-span-2">
-        <span>{{ $isEdit ? 'Ganti Foto Kost (opsional)' : 'Foto Kost' }}</span>
-        <input type="file" name="image" accept="image/*" class="field-input py-3">
-        @error('image')
+        <span>{{ $isEdit ? 'Ganti Semua Foto Kost (opsional)' : 'Foto Kost' }}</span>
+        <input type="file" name="images[]" accept="image/*" class="field-input py-3" multiple {{ $isEdit ? '' : 'required' }}>
+        <small class="text-xs text-[var(--muted)]">Bisa pilih beberapa foto sekaligus, maksimal 8 foto dan 2 MB per foto.</small>
+        @error('images')
+            <small class="field-error">{{ $message }}</small>
+        @enderror
+        @error('images.*')
             <small class="field-error">{{ $message }}</small>
         @enderror
     </label>

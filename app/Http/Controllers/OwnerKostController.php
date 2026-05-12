@@ -71,11 +71,7 @@ class OwnerKostController extends Controller
                 ]
             );
 
-            $kost->images()->create([
-                'image_data' => base64_encode(file_get_contents($validated['image']->getRealPath())),
-                'mime_type' => $validated['image']->getMimeType(),
-                'image_path' => null,
-            ]);
+            $this->storeImages($kost, $validated['images']);
 
             $kost->room()->create([
                 'total_kamar' => (int) $validated['total_kamar'],
@@ -122,22 +118,9 @@ class OwnerKostController extends Controller
             ]
         );
 
-        if (isset($validated['image'])) {
-            $oldImage = $kost->primaryImage;
-
-            if ($oldImage) {
-                if ($oldImage->image_path) {
-                    Storage::disk('public')->delete($oldImage->image_path);
-                }
-
-                $oldImage->delete();
-            }
-
-            $kost->images()->create([
-                'image_data' => base64_encode(file_get_contents($validated['image']->getRealPath())),
-                'mime_type' => $validated['image']->getMimeType(),
-                'image_path' => null,
-            ]);
+        if (! empty($validated['images'])) {
+            $this->deleteImages($kost);
+            $this->storeImages($kost, $validated['images']);
         }
 
         return redirect()
@@ -149,11 +132,7 @@ class OwnerKostController extends Controller
     {
         $this->authorizeOwner($request, $kost);
 
-        foreach ($kost->images as $image) {
-            if ($image->image_path) {
-                Storage::disk('public')->delete($image->image_path);
-            }
-        }
+        $this->deleteImages($kost);
 
         $kost->delete();
 
@@ -176,7 +155,8 @@ class OwnerKostController extends Controller
             'kamar_tersedia' => ['required', 'integer', 'min:0', 'lte:total_kamar'],
             'phone' => ['required', 'string', 'max:30'],
             'contact_email' => ['required', 'email', 'max:255'],
-            'image' => [$imageRequired ? 'required' : 'nullable', 'image', 'max:2048'],
+            'images' => [$imageRequired ? 'required' : 'nullable', 'array', 'min:1', 'max:8'],
+            'images.*' => ['image', 'max:2048'],
         ], [
             'nama_kost.required' => 'Nama kost wajib diisi.',
             'alamat.required' => 'Alamat wajib diisi.',
@@ -195,9 +175,12 @@ class OwnerKostController extends Controller
             'phone.required' => 'Nomor HP owner wajib diisi.',
             'contact_email.required' => 'Email owner wajib diisi.',
             'contact_email.email' => 'Email owner tidak valid.',
-            'image.required' => 'Foto kost wajib diunggah.',
-            'image.image' => 'File foto harus berupa gambar.',
-            'image.max' => 'Ukuran foto maksimal 2 MB.',
+            'images.required' => 'Foto kost wajib diunggah.',
+            'images.array' => 'Foto kost tidak valid.',
+            'images.min' => 'Minimal unggah 1 foto kost.',
+            'images.max' => 'Maksimal unggah 8 foto kost.',
+            'images.*.image' => 'Semua file foto harus berupa gambar.',
+            'images.*.max' => 'Ukuran tiap foto maksimal 2 MB.',
         ]);
     }
 
@@ -217,5 +200,29 @@ class OwnerKostController extends Controller
     protected function authorizeOwner(Request $request, Kost $kost): void
     {
         abort_unless($kost->user_id === $request->user()->id, 403, 'Anda tidak berhak mengelola kost ini.');
+    }
+
+    protected function storeImages(Kost $kost, array $images): void
+    {
+        foreach ($images as $image) {
+            $kost->images()->create([
+                'image_data' => base64_encode(file_get_contents($image->getRealPath())),
+                'mime_type' => $image->getMimeType(),
+                'image_path' => null,
+            ]);
+        }
+    }
+
+    protected function deleteImages(Kost $kost): void
+    {
+        $kost->loadMissing('images');
+
+        foreach ($kost->images as $image) {
+            if ($image->image_path) {
+                Storage::disk('public')->delete($image->image_path);
+            }
+
+            $image->delete();
+        }
     }
 }

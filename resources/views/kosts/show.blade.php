@@ -6,7 +6,7 @@
     @php
         $images = $kost->images->count() ? $kost->images : collect([$kost->primaryImage])->filter();
         $gallery = $images->map(fn ($item) => $item?->image_url)->filter()->values();
-        $heroImage = $gallery->first();
+        $heroImage = $gallery->first() ?: $kost->google_street_view_image_url;
         $contact = $kost->owner?->ownerContact;
         $ownerEmail = $contact?->email ?? $kost->owner?->email;
         $facilities = collect(preg_split('/\r\n|\r|\n/', $kost->fasilitas) ?: [])->filter()->values();
@@ -31,13 +31,20 @@
     <div class="detail-layout mt-8">
         <section class="space-y-6">
             <article class="gallery-shell" data-reveal>
-                @if ($heroImage)
-                    <img src="{{ $heroImage }}" alt="{{ $kost->nama_kost }}" class="gallery-main-image" data-gallery-main>
-                @else
-                    <div class="placeholder-cover gallery-main-image">
-                        <span>Belum ada foto</span>
-                    </div>
-                @endif
+                <div class="gallery-main-wrap">
+                    @if ($heroImage)
+                        <img src="{{ $heroImage }}" alt="{{ $kost->nama_kost }}" class="gallery-main-image" data-gallery-main>
+                    @else
+                        <div class="placeholder-cover gallery-main-image">
+                            <span>Belum ada foto</span>
+                        </div>
+                    @endif
+
+                    @if ($gallery->count() > 1)
+                        <button type="button" class="gallery-nav-button gallery-nav-prev" data-gallery-prev aria-label="Foto sebelumnya">&lsaquo;</button>
+                        <button type="button" class="gallery-nav-button gallery-nav-next" data-gallery-next aria-label="Foto berikutnya">&rsaquo;</button>
+                    @endif
+                </div>
 
                 @if ($gallery->count() > 1)
                     <div class="gallery-thumbs">

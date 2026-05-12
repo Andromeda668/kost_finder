@@ -4,7 +4,7 @@
 
 @section('content')
     @php
-        $image = $kost->primaryImage?->image_url;
+        $image = $kost->display_image_url;
     @endphp
 
     <section class="page-heading" data-reveal>

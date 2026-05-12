@@ -14,7 +14,7 @@
     <section class="mt-8 grid gap-4">
         @forelse ($bookings as $booking)
             @php
-                $image = $booking->kost->primaryImage?->image_url;
+                $image = $booking->kost->display_image_url;
                 $ownerContact = $booking->kost->owner?->ownerContact;
                 $ownerEmail = $ownerContact?->email ?? $booking->kost->owner?->email;
             @endphp
