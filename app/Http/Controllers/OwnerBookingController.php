@@ -57,4 +57,24 @@ class OwnerBookingController extends Controller
             'counts' => $counts,
         ]);
     }
+
+    /**
+     * Update the payment status of a booking.
+     */
+    public function updatePaymentStatus(Request $request, Booking $booking): \Illuminate\Http\RedirectResponse
+    {
+        abort_unless($booking->kost->user_id === $request->user()->id, 403, 'Anda tidak berhak mengelola booking ini.');
+
+        $validated = $request->validate([
+            'is_paid' => ['required', 'boolean'],
+        ]);
+
+        if ($booking->status !== Booking::STATUS_ACCEPTED) {
+            return back()->with('status', 'Status pembayaran hanya bisa diubah untuk booking yang sudah diterima.');
+        }
+
+        $booking->update(['is_paid' => $validated['is_paid']]);
+
+        return back()->with('status', 'Status pembayaran booking berhasil diperbarui.');
+    }
 }

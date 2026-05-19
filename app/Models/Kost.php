@@ -15,6 +15,13 @@ class Kost extends Model
 {
     use HasFactory;
 
+    public const PAYMENT_METHODS = [
+        'e-banking',
+        'e-wallet',
+        'qris',
+        'cash',
+    ];
+
     protected $fillable = [
         'user_id',
         'nama_kost',
@@ -27,6 +34,7 @@ class Kost extends Model
         'harga_bulanan',
         'deskripsi',
         'fasilitas',
+        'payment_methods',
     ];
 
     protected function casts(): array
@@ -35,6 +43,7 @@ class Kost extends Model
             'harga' => 'integer',
             'harga_harian' => 'integer',
             'harga_bulanan' => 'integer',
+            'payment_methods' => 'array',
         ];
     }
 

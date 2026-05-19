@@ -22,9 +22,12 @@ class KostFinderTest extends TestCase
             'alamat' => 'Jl. Melati No. 10',
             'lokasi' => 'Bandung',
             'google_maps_link' => 'https://maps.google.com/?q=Bandung',
-            'harga' => 1200000,
+            'currency' => 'IDR', // Added currency
+            'harga_bulanan' => 1200000, // Changed from 'harga'
+            'harga_harian' => 50000, // Added daily price
             'deskripsi' => 'Kost nyaman dekat kampus.',
             'fasilitas' => "WiFi\nAC",
+            'payment_methods' => ['e-banking', 'e-wallet', 'cash'], // Default payment methods for tests
         ], $kostAttributes));
 
         Room::query()->create(array_merge([
@@ -107,10 +110,35 @@ class KostFinderTest extends TestCase
             'tanggal_masuk' => now()->addDays(3)->toDateString(),
             'tipe_sewa' => 'bulanan',
             'durasi' => 3,
+            'payment_method' => 'e-banking',
         ]);
 
         $response->assertRedirect(route('kosts.show', $kost));
         $this->assertDatabaseHas('bookings', [
+            'user_id' => $user->id,
+            'kost_id' => $kost->id,
+            'payment_method' => 'e-banking',
+            'status' => Booking::STATUS_PENDING,
+        ]);
+    }
+
+    public function test_user_cannot_create_booking_with_unavailable_payment_method(): void
+    {
+        $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
+        $user = User::factory()->create(['role' => User::ROLE_USER]);
+        // Create a kost that only accepts 'cash'
+        $kost = $this->createKostWithRoom($owner, ['payment_methods' => ['cash']]);
+
+        $response = $this->actingAs($user)->post(route('bookings.store', $kost), [
+            'tanggal_masuk' => now()->addDays(3)->toDateString(),
+            'tipe_sewa' => 'bulanan',
+            'durasi' => 3,
+            'payment_method' => 'e-banking', // Try to book with an unavailable method
+        ]);
+
+        $response->assertSessionHasErrors('payment_method');
+        $response->assertRedirect(); // Should redirect back with errors
+        $this->assertDatabaseMissing('bookings', [
             'user_id' => $user->id,
             'kost_id' => $kost->id,
             'status' => Booking::STATUS_PENDING,

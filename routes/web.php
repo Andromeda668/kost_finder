@@ -42,5 +42,6 @@ Route::prefix('owner')->name('owner.')->middleware(['auth', 'owner'])->group(fun
     Route::delete('/kosts/{kost}', [OwnerKostController::class, 'destroy'])->name('kosts.destroy');
     Route::get('/bookings', [OwnerBookingController::class, 'index'])->name('bookings.index');
     Route::get('/riwayat', [OwnerBookingController::class, 'history'])->name('history');
-    Route::patch('/bookings/{booking}/status', [BookingController::class, 'updateStatus'])->name('bookings.status');
+    Route::patch('/bookings/{booking}/status', [BookingController::class, 'updateStatus'])->name('bookings.status'); // Existing route for booking status
+    Route::patch('/bookings/{booking}/payment-status', [OwnerBookingController::class, 'updatePaymentStatus'])->name('bookings.paymentStatus'); // New route for payment status
 });

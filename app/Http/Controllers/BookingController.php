@@ -43,6 +43,7 @@ class BookingController extends Controller
             'tanggal_masuk' => ['required', 'date', 'after_or_equal:today'],
             'tipe_sewa' => ['required', 'in:harian,bulanan'],
             'durasi' => ['required', 'integer', 'min:1', 'max:365'],
+            'payment_method' => ['required', 'string'],
         ], [
             'tanggal_masuk.required' => 'Tanggal masuk wajib diisi.',
             'tanggal_masuk.after_or_equal' => 'Tanggal masuk tidak boleh sebelum hari ini.',
@@ -50,6 +51,7 @@ class BookingController extends Controller
             'durasi.required' => 'Durasi sewa wajib diisi.',
             'durasi.min' => 'Durasi minimal 1.',
             'durasi.max' => 'Durasi terlalu besar.',
+            'payment_method.required' => 'Metode pembayaran wajib dipilih.',
         ]);
 
         if ($validated['tipe_sewa'] === 'bulanan' && (int) $validated['durasi'] > 24) {
@@ -74,6 +76,13 @@ class BookingController extends Controller
             return back()->withInput()->with('status', 'Maaf, kost ini sedang penuh dan belum bisa dibooking.');
         }
 
+        // Validate selected payment method against kost's available payment methods
+        if (! in_array($validated['payment_method'], $kost->payment_methods ?? [])) {
+            return back()->withInput()->withErrors([
+                'payment_method' => 'Metode pembayaran yang dipilih tidak tersedia untuk kost ini.',
+            ]);
+        }
+
         Booking::query()->create([
             'user_id' => $request->user()->id,
             'kost_id' => $kost->id,
@@ -82,6 +91,7 @@ class BookingController extends Controller
             'durasi' => (int) $validated['durasi'],
             'durasi_bulan' => $validated['tipe_sewa'] === 'bulanan' ? (int) $validated['durasi'] : 0,
             'status' => Booking::STATUS_PENDING,
+            'payment_method' => $validated['payment_method'],
             'created_at' => now(),
         ]);
 
