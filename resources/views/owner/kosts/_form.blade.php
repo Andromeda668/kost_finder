@@ -12,6 +12,10 @@
         ->filter()
         ->values()
         ->toArray());
+    $selectedPaymentMethods = old('payment_methods', $kost->exists ? $kost->available_payment_methods : []);
+    $selectedPaymentMethods = is_array($selectedPaymentMethods) ? $selectedPaymentMethods : [];
+    $paymentDetails = old('payment_details', $kost->payment_details ?? []);
+    $paymentDetails = is_array($paymentDetails) ? $paymentDetails : [];
 @endphp
 
 <div data-kost-wizard>
@@ -249,11 +253,28 @@
             </div>
 
             <div class="md:col-span-2">
-                <p class="text-sm font-semibold text-[var(--ink)]">{{ $isEdit ? 'Ganti semua foto (opsional)' : 'Foto kost' }}</p>
+                <p class="text-sm font-semibold text-[var(--ink)]">Thumbnail Kost</p>
+                <p class="mt-1 text-xs text-[var(--muted)]">Unggah thumbnail yang muncul di halaman daftar kost.</p>
+
+                <label class="field-group mt-3">
+                    <input type="file" name="thumbnail_image" accept="image/*" class="field-input">
+                    @if ($kost->thumbnail_image_url)
+                        <img src="{{ $kost->thumbnail_image_url }}" alt="Thumbnail {{ $kost->nama_kost }}" class="mt-3 h-40 w-full max-w-xs rounded-[22px] object-cover">
+                        <small class="text-xs text-[var(--muted)]">Thumbnail saat ini. Upload ulang untuk mengganti.</small>
+                    @endif
+                </label>
+
+                @error('thumbnail_image')
+                    <small class="field-error mt-2 block">{{ $message }}</small>
+                @enderror
+            </div>
+
+            <div class="md:col-span-2">
+                <p class="text-sm font-semibold text-[var(--ink)]">{{ $isEdit ? 'Ganti semua foto (opsional)' : 'Foto kost (opsional)' }}</p>
                 <p class="mt-1 text-xs text-[var(--muted)]">Klik area di bawah untuk memilih beberapa foto (maks 8 foto, 2MB per foto).</p>
 
                 <label class="upload-drop mt-3 block">
-                    <input type="file" name="images[]" accept="image/*" class="sr-only" multiple {{ $isEdit ? '' : 'required' }} data-upload-input>
+                    <input type="file" name="images[]" accept="image/*" class="sr-only" multiple data-upload-input>
                     <div class="upload-drop-inner">
                         <p class="font-semibold text-[var(--ink)]">Klik untuk upload foto</p>
                         <p class="mt-1 text-xs text-[var(--muted)]" data-upload-hint>Belum ada file dipilih</p>
@@ -327,6 +348,83 @@
                 @enderror
                 <small class="text-xs text-[var(--muted)]">Minimal isi salah satu: harian atau bulanan.</small>
             </label>
+
+            <div class="md:col-span-2">
+                <p class="text-sm font-semibold text-[var(--ink)]">Metode Pembayaran</p>
+                <p class="mt-1 text-xs text-[var(--muted)]">Pilih metode yang bisa digunakan penyewa saat booking.</p>
+
+                <div class="mt-4 grid gap-4 md:grid-cols-2">
+                    @foreach (\App\Models\Kost::paymentMethodGroups() as $group => $methods)
+                        <div class="rounded-[24px] border border-[var(--line)] bg-[var(--surface-muted)] p-4">
+                            <p class="text-sm font-semibold text-[var(--ink)]">{{ $group }}</p>
+                            <div class="mt-3 grid gap-2">
+                                @foreach ($methods as $method)
+                                    <label class="flex cursor-pointer items-center gap-3 rounded-[18px] bg-white px-4 py-3 text-sm font-semibold text-[var(--ink)]">
+                                        <input
+                                            type="checkbox"
+                                            name="payment_methods[]"
+                                            value="{{ $method }}"
+                                            class="h-4 w-4 accent-[var(--primary)]"
+                                            {{ in_array($method, $selectedPaymentMethods, true) ? 'checked' : '' }}
+                                        >
+                                        <span>{{ \App\Models\Kost::paymentMethodLabel($method) }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="mt-5 grid gap-4">
+                    <div data-payment-detail-empty class="rounded-[24px] border border-[var(--line)] bg-[var(--surface-muted)] p-4 text-sm text-[var(--muted)] {{ count($selectedPaymentMethods) ? 'hidden' : '' }}">
+                        Pilih metode pembayaran terlebih dahulu untuk menampilkan detail yang dapat diisi.
+                    </div>
+                    @foreach (\App\Models\Kost::paymentMethodOptions() as $method => $label)
+                        @php
+                            $detail = $paymentDetails[$method] ?? [];
+                            $isQris = $method === 'qris';
+                            $isCash = $method === 'cash';
+                        @endphp
+                        <div data-payment-detail-panel="{{ $method }}" class="rounded-[24px] border border-[var(--line)] bg-white p-4 {{ in_array($method, $selectedPaymentMethods, true) ? '' : 'hidden' }}">
+                            <p class="text-sm font-semibold text-[var(--ink)]">Detail {{ $label }}</p>
+                            <div class="mt-3 grid gap-3 md:grid-cols-2">
+                                @if (! $isCash && ! $isQris)
+                                    <label class="field-group">
+                                        <span>Nama penerima</span>
+                                        <input type="text" name="payment_details[{{ $method }}][account_name]" value="{{ $detail['account_name'] ?? '' }}" class="field-input" placeholder="Contoh: Nadia Owner">
+                                    </label>
+                                    <label class="field-group">
+                                        <span>Nomor tujuan</span>
+                                        <input type="text" name="payment_details[{{ $method }}][account_number]" value="{{ $detail['account_number'] ?? '' }}" class="field-input" placeholder="Nomor e-wallet / rekening">
+                                    </label>
+                                @endif
+
+                                @if ($isQris)
+                                    <label class="field-group md:col-span-2">
+                                        <span>Gambar QRIS</span>
+                                        <input type="file" name="qris_image" accept="image/*" class="field-input">
+                                        @if ($kost->qris_image_url)
+                                            <span class="text-xs text-[var(--muted)]">QRIS sudah tersimpan. Upload ulang jika ingin mengganti.</span>
+                                        @endif
+                                    </label>
+                                @endif
+
+                                <label class="field-group md:col-span-2">
+                                    <span>Instruksi</span>
+                                    <textarea name="payment_details[{{ $method }}][instructions]" rows="2" class="field-input" placeholder="{{ $isCash ? 'Contoh: Bayar langsung saat check-in.' : 'Contoh: Transfer sesuai total tagihan, lalu upload bukti bayar.' }}">{{ $detail['instructions'] ?? '' }}</textarea>
+                                </label>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                @error('payment_methods')
+                    <small class="field-error mt-2 block">{{ $message }}</small>
+                @enderror
+                @error('qris_image')
+                    <small class="field-error mt-2 block">{{ $message }}</small>
+                @enderror
+            </div>
         </div>
     </section>
 
@@ -447,11 +545,34 @@
             const invalid = form.querySelector(':invalid');
             if (invalid) {
                 e.preventDefault();
+                const invalidPanel = invalid.closest('[data-wizard-step]');
+                if (invalidPanel?.dataset.wizardStep) {
+                    showStep(Number(invalidPanel.dataset.wizardStep));
+                }
+                markInvalid(invalid);
                 showAlert('Masih ada field wajib yang kosong. Silakan cek kembali.');
                 invalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 invalid.focus?.();
             }
         });
+
+        const paymentMethodToggles = Array.from(document.querySelectorAll('input[name="payment_methods[]"]'));
+        const paymentDetailPanels = Array.from(document.querySelectorAll('[data-payment-detail-panel]'));
+        const paymentDetailsEmpty = document.querySelector('[data-payment-detail-empty]');
+
+        const syncPaymentDetails = () => {
+            const selectedMethods = paymentMethodToggles.filter((input) => input.checked).map((input) => input.value);
+            paymentDetailPanels.forEach((panel) => {
+                const method = panel.dataset.paymentDetailPanel;
+                panel.classList.toggle('hidden', !selectedMethods.includes(method));
+            });
+            if (paymentDetailsEmpty) {
+                paymentDetailsEmpty.classList.toggle('hidden', selectedMethods.length > 0);
+            }
+        };
+
+        paymentMethodToggles.forEach((input) => input.addEventListener('change', syncPaymentDetails));
+        syncPaymentDetails();
 
         showStep(1);
     })();

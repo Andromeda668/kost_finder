@@ -57,3 +57,45 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Payment methods & manual verification
+
+- Owners can configure `payment_methods` and fill `payment_details` (nama penerima, nomor rekening/e-wallet, instruksi) in the owner kost form.
+- Owners can upload QRIS image in the kost edit form (field `qris_image`).
+- Users can select a payment method during booking, view the selected method details and QR image, copy numbers, and upload payment proof during booking.
+- Owners can view uploaded proofs in the owner bookings list and mark `Sudah bayar` / `Belum bayar`.
+
+Automatic payment confirmation requires integrating a payment gateway (e.g. Midtrans, Xendit, Tripay). To prepare for integration, add these example environment variables to your `.env` or `.env.example`:
+
+- `PAYMENT_PROVIDER` — provider identifier (midtrans/xendit/...)
+- `PAYMENT_GATEWAY_SECRET` — webhook secret or HMAC key
+- `PAYMENT_MERCHANT_ID` — merchant identifier
+- `PAYMENT_CALLBACK_URL` — publicly reachable webhook URL
+- `PAYMENT_MODE` — `sandbox` or `production`
+
+This repo provides a basic webhook endpoint at `/webhooks/payment` which expects a JSON payload containing `booking_id` and `status`. The webhook verifies the `X-Payment-Signature` header using HMAC-SHA256 with `PAYMENT_GATEWAY_SECRET` when configured.
+
+Security notes:
+
+- Keep `PAYMENT_GATEWAY_SECRET` private and do not commit it to version control.
+- For production, use secure storage for uploaded proofs and consider scanning uploads for malware.
+
+Operational notes:
+
+- To serve user-uploaded files from the `public` disk, run:
+
+```bash
+php artisan storage:link
+```
+
+- Start queue workers for background jobs:
+
+```bash
+php artisan queue:work --sleep=3 --tries=3
+```
+
+- Owner payment review page is available at `owner/bookings/pembayaran` and provides review links to each booking payment detail.
+- A background job class `SendBookingPaymentNotification` is scaffolded to process payment proof uploads and status changes asynchronously.
+- Payment gateway integration scaffolding is available in `app/Services/PaymentGateway` with a manager and a sample `MidtransGateway` adapter.
+
+

@@ -37,6 +37,13 @@
                         </div>
                         <p class="mt-3 text-sm text-[var(--muted)]">{{ $booking->kost->lokasi }} | {{ $booking->kost->alamat }}</p>
                         <p class="mt-2 text-sm text-[var(--muted)]">Tanggal masuk: {{ $booking->tanggal_masuk->translatedFormat('d F Y') }} | Durasi: {{ $booking->durasi_label }}</p>
+                        <div class="mt-3 flex flex-wrap items-center gap-2">
+                            <span class="rounded-full bg-[var(--surface-muted)] px-3 py-1 text-xs font-semibold text-[var(--ink)]">Bayar: {{ $booking->payment_method_label }}</span>
+                            <span class="{{ $booking->payment_status_badge_class }}">{{ $booking->payment_status_label }}</span>
+                            @if ($booking->payment_proof_url)
+                                <a href="{{ $booking->payment_proof_url }}" target="_blank" rel="noopener noreferrer" class="table-link">Lihat bukti bayar</a>
+                            @endif
+                        </div>
                         <p class="mt-2 text-sm text-[var(--olive)]">Kamar tersedia saat ini: {{ $booking->kost->room?->kamar_tersedia ?? 0 }} / {{ $booking->kost->room?->total_kamar ?? 0 }}</p>
                     </div>
 

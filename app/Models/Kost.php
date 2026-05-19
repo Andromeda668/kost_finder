@@ -15,6 +15,28 @@ class Kost extends Model
 {
     use HasFactory;
 
+    public const PAYMENT_METHODS = [
+        'ewallet_ovo' => 'OVO',
+        'ewallet_dana' => 'DANA',
+        'ewallet_gopay' => 'GoPay',
+        'ewallet_shopeepay' => 'ShopeePay',
+        'ewallet_linkaja' => 'LinkAja',
+        'bank_bri' => 'BRI',
+        'bank_bni' => 'BNI',
+        'bank_mandiri' => 'Mandiri',
+        'bank_bca' => 'BCA',
+        'bank_bsi' => 'BSI',
+        'qris' => 'QRIS',
+        'cash' => 'Tunai / Cash',
+    ];
+
+    public const PAYMENT_GROUPS = [
+        'E-Wallet' => ['ewallet_ovo', 'ewallet_dana', 'ewallet_gopay', 'ewallet_shopeepay', 'ewallet_linkaja'],
+        'E-Banking / Transfer Bank' => ['bank_bri', 'bank_bni', 'bank_mandiri', 'bank_bca', 'bank_bsi'],
+        'QRIS' => ['qris'],
+        'Tunai' => ['cash'],
+    ];
+
     protected $fillable = [
         'user_id',
         'nama_kost',
@@ -27,6 +49,12 @@ class Kost extends Model
         'harga_bulanan',
         'deskripsi',
         'fasilitas',
+        'payment_methods',
+        'payment_details',
+        'qris_image_data',
+        'qris_mime_type',
+        'thumbnail_image_data',
+        'thumbnail_image_mime_type',
     ];
 
     protected function casts(): array
@@ -35,7 +63,64 @@ class Kost extends Model
             'harga' => 'integer',
             'harga_harian' => 'integer',
             'harga_bulanan' => 'integer',
+            'payment_methods' => 'array',
+            'payment_details' => 'array',
         ];
+    }
+
+    public function getThumbnailImageUrlAttribute(): ?string
+    {
+        if (! $this->thumbnail_image_data || ! $this->thumbnail_image_mime_type) {
+            return null;
+        }
+
+        return 'data:'.$this->thumbnail_image_mime_type.';base64,'.$this->thumbnail_image_data;
+    }
+
+    public static function paymentMethodOptions(): array
+    {
+        return self::PAYMENT_METHODS;
+    }
+
+    public static function paymentMethodGroups(): array
+    {
+        return self::PAYMENT_GROUPS;
+    }
+
+    public static function paymentMethodLabel(?string $method): string
+    {
+        return self::PAYMENT_METHODS[$method] ?? 'Metode tidak diketahui';
+    }
+
+    public function getAvailablePaymentMethodsAttribute(): array
+    {
+        $methods = collect($this->payment_methods ?: [])
+            ->filter(fn ($method) => isset(self::PAYMENT_METHODS[$method]))
+            ->values()
+            ->all();
+
+        return $methods ?: ['cash'];
+    }
+
+    public function getPaymentMethodLabelsAttribute(): array
+    {
+        return collect($this->available_payment_methods)
+            ->map(fn ($method) => self::paymentMethodLabel($method))
+            ->all();
+    }
+
+    public function paymentDetailFor(string $method): array
+    {
+        return (array) (($this->payment_details ?: [])[$method] ?? []);
+    }
+
+    public function getQrisImageUrlAttribute(): ?string
+    {
+        if (! $this->qris_image_data || ! $this->qris_mime_type) {
+            return null;
+        }
+
+        return 'data:'.$this->qris_mime_type.';base64,'.$this->qris_image_data;
     }
 
     public function owner(): BelongsTo

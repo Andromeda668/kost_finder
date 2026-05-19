@@ -87,7 +87,7 @@
                                     <div class="min-w-0">
                                         <p class="text-sm font-semibold text-[var(--ink)]">{{ $booking->user->name }}</p>
                                         <p class="mt-1 truncate text-sm text-[var(--muted)]">{{ $booking->kost->nama_kost }} • {{ $booking->durasi_label }}</p>
-                                        <p class="mt-1 text-xs text-[var(--muted)]">Masuk: {{ $booking->tanggal_masuk->translatedFormat('d M Y') }}</p>
+                                        <p class="mt-1 text-xs text-[var(--muted)]">Masuk: {{ $booking->tanggal_masuk->translatedFormat('d M Y') }} | {{ $booking->payment_method_label }} | {{ $booking->payment_status_label }}</p>
                                     </div>
                                 </div>
 

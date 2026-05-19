@@ -39,4 +39,12 @@ return [
         'key' => env('GOOGLE_MAPS_API_KEY'),
     ],
 
+    'payment_gateway' => [
+        'secret' => env('PAYMENT_GATEWAY_SECRET'),
+        'provider' => env('PAYMENT_PROVIDER'),
+        'merchant_id' => env('PAYMENT_MERCHANT_ID'),
+        'callback_url' => env('PAYMENT_CALLBACK_URL'),
+        'mode' => env('PAYMENT_MODE', 'sandbox'),
+    ],
+
 ];

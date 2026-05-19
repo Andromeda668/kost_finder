@@ -25,6 +25,7 @@ class KostFinderTest extends TestCase
             'harga' => 1200000,
             'deskripsi' => 'Kost nyaman dekat kampus.',
             'fasilitas' => "WiFi\nAC",
+            'payment_methods' => ['cash', 'ewallet_dana'],
         ], $kostAttributes));
 
         Room::query()->create(array_merge([
@@ -107,6 +108,7 @@ class KostFinderTest extends TestCase
             'tanggal_masuk' => now()->addDays(3)->toDateString(),
             'tipe_sewa' => 'bulanan',
             'durasi' => 3,
+            'payment_method' => 'cash',
         ]);
 
         $response->assertRedirect(route('kosts.show', $kost));
@@ -114,6 +116,8 @@ class KostFinderTest extends TestCase
             'user_id' => $user->id,
             'kost_id' => $kost->id,
             'status' => Booking::STATUS_PENDING,
+            'payment_method' => 'cash',
+            'payment_status' => Booking::PAYMENT_UNPAID,
         ]);
     }
 

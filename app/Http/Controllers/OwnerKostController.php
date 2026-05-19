@@ -47,7 +47,12 @@ class OwnerKostController extends Controller
                 ]
             );
 
-            $this->storeImages($kost, $validated['images']);
+            if (! empty($validated['images'])) {
+                $this->storeImages($kost, $validated['images']);
+            }
+
+            $this->storeQrisImage($request, $kost);
+            $this->storeThumbnailImage($request, $kost);
 
             $kost->room()->create([
                 'total_kamar' => (int) $validated['total_kamar'],
@@ -79,6 +84,7 @@ class OwnerKostController extends Controller
         $validated = $this->validateKost($request, false);
 
         $kost->update($this->kostPayload($validated));
+        $this->storeQrisImage($request, $kost);
 
         $kost->room()->updateOrCreate(
             ['kost_id' => $kost->id],
@@ -101,6 +107,8 @@ class OwnerKostController extends Controller
             $this->storeImages($kost, $validated['images']);
         }
 
+        $this->storeQrisImage($request, $kost);
+        $this->storeThumbnailImage($request, $kost);
         $this->syncNearbyPlaces($kost, $validated['nearby_places'] ?? []);
 
         return redirect()
@@ -135,6 +143,14 @@ class OwnerKostController extends Controller
             'fasilitas' => ['nullable', 'string'],
             'fasilitas_items' => ['nullable', 'array', 'max:40'],
             'fasilitas_items.*' => ['nullable', 'string', 'max:80'],
+            'payment_methods' => ['required', 'array', 'min:1'],
+            'payment_methods.*' => ['string', 'in:'.implode(',', array_keys(Kost::paymentMethodOptions()))],
+            'payment_details' => ['nullable', 'array'],
+            'payment_details.*.account_name' => ['nullable', 'string', 'max:120'],
+            'payment_details.*.account_number' => ['nullable', 'string', 'max:120'],
+            'payment_details.*.instructions' => ['nullable', 'string', 'max:500'],
+            'qris_image' => ['nullable', 'image', 'max:2048'],
+            'thumbnail_image' => ['nullable', 'image', 'max:2048'],
             'total_kamar' => ['required', 'integer', 'min:1', 'max:500'],
             'kamar_tersedia' => ['required', 'integer', 'min:0', 'lte:total_kamar'],
             'phone' => ['required', 'string', 'max:30'],
@@ -144,7 +160,7 @@ class OwnerKostController extends Controller
             'nearby_places.*.category' => ['nullable', 'string', 'max:30'],
             'nearby_places.*.google_maps_link' => ['nullable', 'url', 'max:2048'],
             'nearby_places.*.distance_km' => ['required_with:nearby_places', 'numeric', 'min:0.1', 'max:999.99'],
-            'images' => [$imageRequired ? 'required' : 'nullable', 'array', 'min:1', 'max:8'],
+            'images' => ['nullable', 'array', 'min:1', 'max:8'],
             'images.*' => ['image', 'max:2048'],
         ], [
             'nama_kost.required' => 'Nama kost wajib diisi.',
@@ -155,6 +171,8 @@ class OwnerKostController extends Controller
             'harga_bulanan.required_without' => 'Isi harga bulanan atau harga harian.',
             'harga_harian.required_without' => 'Isi harga harian atau harga bulanan.',
             'deskripsi.required' => 'Deskripsi wajib diisi.',
+            'payment_methods.required' => 'Pilih minimal 1 metode pembayaran.',
+            'payment_methods.min' => 'Pilih minimal 1 metode pembayaran.',
             'total_kamar.required' => 'Total kamar wajib diisi.',
             'total_kamar.min' => 'Total kamar minimal 1.',
             'kamar_tersedia.required' => 'Kamar tersedia wajib diisi.',
@@ -168,6 +186,10 @@ class OwnerKostController extends Controller
             'images.max' => 'Maksimal unggah 8 foto kost.',
             'images.*.image' => 'Semua file foto harus berupa gambar.',
             'images.*.max' => 'Ukuran tiap foto maksimal 2 MB.',
+            'qris_image.image' => 'File QRIS harus berupa gambar.',
+            'qris_image.max' => 'Ukuran QRIS maksimal 2 MB.',
+            'thumbnail_image.image' => 'File thumbnail harus berupa gambar.',
+            'thumbnail_image.max' => 'Ukuran thumbnail maksimal 2 MB.',
         ]);
     }
 
@@ -195,6 +217,21 @@ class OwnerKostController extends Controller
             $mapsLink = 'https://www.google.com/maps?q='.rawurlencode(trim($validated['alamat'].' '.$validated['lokasi']));
         }
 
+        $selectedPaymentMethods = collect($validated['payment_methods'] ?? ['cash'])
+            ->filter(fn ($method) => isset(Kost::paymentMethodOptions()[$method]))
+            ->values()
+            ->all();
+
+        $paymentDetails = [];
+        foreach ($selectedPaymentMethods as $method) {
+            $detail = (array) (($validated['payment_details'] ?? [])[$method] ?? []);
+            $paymentDetails[$method] = [
+                'account_name' => trim((string) ($detail['account_name'] ?? '')),
+                'account_number' => trim((string) ($detail['account_number'] ?? '')),
+                'instructions' => trim((string) ($detail['instructions'] ?? '')),
+            ];
+        }
+
         return [
             'nama_kost' => $validated['nama_kost'],
             'alamat' => $validated['alamat'],
@@ -207,6 +244,8 @@ class OwnerKostController extends Controller
             'harga' => (int) ($monthly ?: $daily ?: 0),
             'deskripsi' => $validated['deskripsi'],
             'fasilitas' => $facilitiesText,
+            'payment_methods' => $selectedPaymentMethods,
+            'payment_details' => $paymentDetails,
         ];
     }
 
@@ -254,25 +293,45 @@ class OwnerKostController extends Controller
         }
     }
 
+    protected function storeQrisImage(Request $request, Kost $kost): void
+    {
+        $image = $request->file('qris_image');
+
+        if (! $image) {
+            return;
+        }
+
+        $kost->forceFill([
+            'qris_image_data' => base64_encode(file_get_contents($image->getRealPath())),
+            'qris_mime_type' => $image->getMimeType(),
+        ])->save();
+    }
+
+    protected function storeThumbnailImage(Request $request, Kost $kost): void
+    {
+        $image = $request->file('thumbnail_image');
+
+        if (! $image) {
+            return;
+        }
+
+        $kost->forceFill([
+            'thumbnail_image_data' => base64_encode(file_get_contents($image->getRealPath())),
+            'thumbnail_image_mime_type' => $image->getMimeType(),
+        ])->save();
+    }
+
     protected function syncNearbyPlaces(Kost $kost, array $nearbyPlaces): void
     {
         $kost->nearbyPlaces()->delete();
 
-        $payload = collect($nearbyPlaces)
+        collect($nearbyPlaces)
             ->filter(fn ($place) => ! empty($place['label']) && ! empty($place['distance_km']))
-            ->map(fn ($place) => [
+            ->each(fn ($place) => $kost->nearbyPlaces()->create([
                 'label' => (string) $place['label'],
                 'category' => (string) ($place['category'] ?? 'lainnya'),
                 'google_maps_link' => ! empty($place['google_maps_link']) ? (string) $place['google_maps_link'] : null,
                 'distance_km' => (float) $place['distance_km'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ])
-            ->values()
-            ->all();
-
-        if ($payload) {
-            $kost->nearbyPlaces()->insert($payload);
-        }
+            ]));
     }
 }

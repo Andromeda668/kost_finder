@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\PaymentLog;
 
 class Booking extends Model
 {
@@ -13,6 +15,8 @@ class Booking extends Model
     public const STATUS_PENDING = 'pending';
     public const STATUS_ACCEPTED = 'diterima';
     public const STATUS_REJECTED = 'ditolak';
+    public const PAYMENT_UNPAID = 'belum_bayar';
+    public const PAYMENT_PAID = 'sudah_bayar';
 
     public $timestamps = false;
 
@@ -23,6 +27,10 @@ class Booking extends Model
         'tipe_sewa',
         'durasi',
         'durasi_bulan',
+        'payment_method',
+        'payment_status',
+        'payment_proof_data',
+        'payment_proof_mime_type',
         'status',
         'created_at',
     ];
@@ -47,6 +55,32 @@ class Booking extends Model
             : $duration.' bulan';
     }
 
+    public function getPaymentMethodLabelAttribute(): string
+    {
+        return Kost::paymentMethodLabel($this->payment_method);
+    }
+
+    public function getPaymentStatusLabelAttribute(): string
+    {
+        return $this->payment_status === self::PAYMENT_PAID ? 'Sudah bayar' : 'Belum bayar';
+    }
+
+    public function getPaymentStatusBadgeClassAttribute(): string
+    {
+        return $this->payment_status === self::PAYMENT_PAID
+            ? 'status-badge status-available'
+            : 'status-badge status-limited';
+    }
+
+    public function getPaymentProofUrlAttribute(): ?string
+    {
+        if (! $this->payment_proof_data || ! $this->payment_proof_mime_type) {
+            return null;
+        }
+
+        return 'data:'.$this->payment_proof_mime_type.';base64,'.$this->payment_proof_data;
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -55,6 +89,11 @@ class Booking extends Model
     public function kost(): BelongsTo
     {
         return $this->belongsTo(Kost::class);
+    }
+
+    public function paymentLogs(): HasMany
+    {
+        return $this->hasMany(PaymentLog::class)->orderBy('created_at');
     }
 
     public function getStatusBadgeClassAttribute(): string

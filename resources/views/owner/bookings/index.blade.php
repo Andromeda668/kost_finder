@@ -10,7 +10,10 @@
                 <h1 class="font-display text-4xl font-semibold sm:text-5xl">Permintaan booking</h1>
                 <p class="mt-3 max-w-3xl text-base leading-8 text-[var(--muted)]">Tampilkan hanya booking pending yang perlu diproses.</p>
             </div>
-            <a href="{{ route('owner.dashboard') }}" class="ghost-button">Kembali</a>
+            <div class="flex flex-wrap gap-3">
+                <a href="{{ route('owner.bookings.payments') }}" class="ghost-button">Riwayat Pembayaran</a>
+                <a href="{{ route('owner.dashboard') }}" class="ghost-button">Kembali</a>
+            </div>
         </div>
     </section>
 
@@ -49,12 +52,28 @@
                                 <div class="mt-2 grid gap-1 text-xs text-[var(--muted)] sm:grid-cols-2">
                                     <p>Masuk: <span class="font-semibold text-[var(--ink)]">{{ $booking->tanggal_masuk->translatedFormat('d M Y') }}</span></p>
                                     <p>Lokasi: <span class="font-semibold text-[var(--ink)]">{{ $booking->kost->lokasi }}</span></p>
+                                    <p>Pembayaran: <span class="font-semibold text-[var(--ink)]">{{ $booking->payment_method_label }}</span></p>
+                                    <p>Status bayar: <span class="{{ $booking->payment_status_badge_class }}">{{ $booking->payment_status_label }}</span></p>
                                 </div>
+                                @if ($booking->payment_proof_url)
+                                    <a href="{{ $booking->payment_proof_url }}" target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex text-xs font-semibold text-[var(--primary-deep)]">Lihat bukti pembayaran</a>
+                                @else
+                                    <p class="mt-3 text-xs text-[var(--muted)]">Belum ada bukti pembayaran.</p>
+                                @endif
                             </div>
                         </div>
 
                         <div class="flex flex-wrap items-center justify-end gap-3">
                             <a href="{{ route('kosts.show', $booking->kost) }}" class="table-link">Lihat Kost</a>
+
+                            <form action="{{ route('owner.bookings.payment-status', $booking) }}" method="POST">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="payment_status" value="{{ $booking->payment_status === \App\Models\Booking::PAYMENT_PAID ? \App\Models\Booking::PAYMENT_UNPAID : \App\Models\Booking::PAYMENT_PAID }}">
+                                <button type="submit" class="table-link">
+                                    {{ $booking->payment_status === \App\Models\Booking::PAYMENT_PAID ? 'Tandai Belum Bayar' : 'Tandai Sudah Bayar' }}
+                                </button>
+                            </form>
 
                             @if ($booking->status === \App\Models\Booking::STATUS_PENDING)
                                 <form action="{{ route('owner.bookings.status', $booking) }}" method="POST">
@@ -85,4 +104,3 @@
         </div>
     </section>
 @endsection
-

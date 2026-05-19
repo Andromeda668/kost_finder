@@ -129,6 +129,31 @@
         .owner-kost-card-compact .home-kost-body { padding: 1.25rem; }
         .owner-kost-card-compact .home-kost-footer { margin-top: 1rem; padding-top: 1rem; }
         .owner-kost-list { display: grid; gap: 1.5rem; }
+        .owner-kost-row { display: flex; align-items: stretch; gap: 1rem; border-radius: 20px; border: 1px solid var(--line); background: #fff; padding: 1rem; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08); }
+        .owner-kost-image-wrapper { position: relative; width: 140px; height: 140px; flex: 0 0 140px; }
+        .owner-kost-image { position: relative; display: block; width: 100%; height: 100%; overflow: hidden; border-radius: 16px; border: 1px solid rgba(15,118,110,.08); background: var(--surface-muted); }
+        .owner-kost-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
+        .owner-kost-info { display: flex; min-width: 0; flex: 1 1 auto; flex-direction: column; justify-content: center; }
+        .owner-kost-header { margin-bottom: .5rem; }
+        .owner-kost-header h3 { margin: 0; }
+        .owner-kost-header a { display: block; overflow: hidden; color: var(--ink); font-size: 1rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+        .owner-kost-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem; font-size: .75rem; }
+        .owner-kost-meta-item { display: inline-flex; align-items: center; gap: .375rem; }
+        .owner-kost-meta-item span:first-child { color: var(--muted); font-weight: 400; }
+        .owner-kost-meta-item span:last-child { color: var(--ink); font-weight: 700; }
+        .owner-kost-actions { display: flex; min-width: 140px; flex: 0 0 140px; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: .75rem; }
+        .owner-kost-price { text-align: right; }
+        .owner-kost-price p:first-child { color: var(--muted); font-size: .75rem; }
+        .owner-kost-price p:last-child { margin-top: .25rem; color: var(--primary); font-size: 1.125rem; font-weight: 800; }
+        .owner-kost-buttons { display: flex; width: 100%; flex-direction: column; gap: .5rem; }
+        .owner-kost-buttons a, .owner-kost-buttons button { border-radius: 12px; padding: .5rem .75rem; font-size: .75rem; font-weight: 700; text-align: center; }
+        .owner-kost-buttons .solid-button, .owner-kost-buttons .ghost-button { min-height: auto; box-shadow: none; }
+        @media (max-width: 768px) {
+            .owner-kost-row { flex-wrap: wrap; }
+            .owner-kost-image-wrapper { width: 100px; height: 100px; flex-basis: 100px; }
+            .owner-kost-actions { min-width: 100%; flex-basis: 100%; flex-direction: row; align-items: center; }
+            .owner-kost-buttons { width: auto; flex-direction: row; }
+        }
         .owner-kost-item { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem; border-radius: 28px; border: 1px solid var(--line); background: #fff; padding: 1.25rem; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08); }
         @media (min-width: 768px) { .owner-kost-item { flex-wrap: nowrap; } }
         .owner-kost-left { display: flex; min-width: 0; align-items: center; gap: 1rem; }
@@ -144,6 +169,9 @@
         .status-available { background: rgba(106,122,82,.14); color: #4d6d55; }
         .status-limited { background: rgba(228,182,87,.18); color: #93691a; }
         .status-full { background: rgba(209,91,91,.16); color: #a44747; }
+        .payment-choice { display: flex; cursor: pointer; align-items: center; gap: .75rem; border-radius: 22px; border: 1px solid var(--line); background: #fff; padding: .75rem 1rem; font-size: .875rem; font-weight: 700; color: var(--ink); transition: border-color .2s ease, background .2s ease, color .2s ease; }
+        .payment-choice:has(input:checked) { border-color: rgba(15,118,110,.32); background: var(--secondary); color: var(--primary-deep); }
+        .payment-detail-panel { border-radius: 24px; border: 1px solid var(--line); background: var(--surface-muted); padding: 1rem; }
         .mini-meta { font-size: .875rem; color: var(--muted); }
         .map-embed-shell { overflow: hidden; border-radius: 28px; border: 1px solid var(--line); background: var(--surface-muted); }
         .map-embed-frame { width: 100%; height: 320px; border: 0; }

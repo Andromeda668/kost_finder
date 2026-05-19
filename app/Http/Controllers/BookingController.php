@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendBookingPaymentNotification;
 use App\Models\Booking;
 use App\Models\Kost;
 use Illuminate\Http\RedirectResponse;
@@ -43,6 +44,8 @@ class BookingController extends Controller
             'tanggal_masuk' => ['required', 'date', 'after_or_equal:today'],
             'tipe_sewa' => ['required', 'in:harian,bulanan'],
             'durasi' => ['required', 'integer', 'min:1', 'max:365'],
+            'payment_method' => ['required', 'string', 'in:'.implode(',', $kost->available_payment_methods)],
+            'payment_proof' => ['nullable', 'image', 'max:2048'],
         ], [
             'tanggal_masuk.required' => 'Tanggal masuk wajib diisi.',
             'tanggal_masuk.after_or_equal' => 'Tanggal masuk tidak boleh sebelum hari ini.',
@@ -50,7 +53,13 @@ class BookingController extends Controller
             'durasi.required' => 'Durasi sewa wajib diisi.',
             'durasi.min' => 'Durasi minimal 1.',
             'durasi.max' => 'Durasi terlalu besar.',
+            'payment_method.required' => 'Pilih metode pembayaran.',
+            'payment_method.in' => 'Metode pembayaran tidak tersedia untuk kost ini.',
+            'payment_proof.image' => 'Bukti pembayaran harus berupa gambar.',
+            'payment_proof.max' => 'Ukuran bukti pembayaran maksimal 2 MB.',
         ]);
+
+        $paymentProof = $request->file('payment_proof');
 
         if ($validated['tipe_sewa'] === 'bulanan' && (int) $validated['durasi'] > 24) {
             return back()->withInput()->withErrors([
@@ -74,16 +83,37 @@ class BookingController extends Controller
             return back()->withInput()->with('status', 'Maaf, kost ini sedang penuh dan belum bisa dibooking.');
         }
 
-        Booking::query()->create([
+        $booking = Booking::create([
             'user_id' => $request->user()->id,
             'kost_id' => $kost->id,
             'tanggal_masuk' => $validated['tanggal_masuk'],
             'tipe_sewa' => $validated['tipe_sewa'],
             'durasi' => (int) $validated['durasi'],
             'durasi_bulan' => $validated['tipe_sewa'] === 'bulanan' ? (int) $validated['durasi'] : 0,
+            'payment_method' => $validated['payment_method'],
+            'payment_status' => Booking::PAYMENT_UNPAID,
+            'payment_proof_data' => $paymentProof ? base64_encode(file_get_contents($paymentProof->getRealPath())) : null,
+            'payment_proof_mime_type' => $paymentProof?->getMimeType(),
             'status' => Booking::STATUS_PENDING,
             'created_at' => now(),
         ]);
+
+        if ($paymentProof) {
+            $booking->paymentLogs()->create([
+                'user_id' => $request->user()->id,
+                'type' => 'proof_uploaded',
+                'data' => [
+                    'mime' => $paymentProof->getMimeType(),
+                    'size' => $paymentProof->getSize(),
+                ],
+                'created_at' => now(),
+            ]);
+
+            SendBookingPaymentNotification::dispatch($booking, 'proof_uploaded', $request->user()->id, [
+                'mime' => $paymentProof->getMimeType(),
+                'size' => $paymentProof->getSize(),
+            ]);
+        }
 
         return redirect()
             ->route('kosts.show', $kost)
@@ -117,5 +147,33 @@ class BookingController extends Controller
         });
 
         return back()->with('status', 'Status booking berhasil diperbarui.');
+    }
+
+    public function updatePaymentStatus(Request $request, Booking $booking): RedirectResponse
+    {
+        abort_unless($booking->kost->user_id === $request->user()->id, 403, 'Anda tidak berhak mengelola booking ini.');
+
+        $validated = $request->validate([
+            'payment_status' => ['required', 'in:belum_bayar,sudah_bayar'],
+        ]);
+
+        $booking->update([
+            'payment_status' => $validated['payment_status'],
+        ]);
+
+        $booking->paymentLogs()->create([
+            'user_id' => $request->user()->id,
+            'type' => 'status_changed',
+            'data' => [
+                'payment_status' => $validated['payment_status'],
+            ],
+            'created_at' => now(),
+        ]);
+
+        SendBookingPaymentNotification::dispatch($booking, 'status_changed', $request->user()->id, [
+            'payment_status' => $validated['payment_status'],
+        ]);
+
+        return back()->with('status', 'Status pembayaran berhasil diperbarui.');
     }
 }

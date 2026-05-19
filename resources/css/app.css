@@ -634,6 +634,23 @@
         @apply inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold;
     }
 
+    .payment-choice {
+        @apply flex cursor-pointer items-center gap-3 rounded-[22px] border bg-white px-4 py-3 text-sm font-semibold transition;
+        border-color: var(--line);
+        color: var(--ink);
+    }
+
+    .payment-choice:has(input:checked) {
+        border-color: rgba(15, 118, 110, 0.32);
+        background: var(--secondary);
+        color: var(--primary-deep);
+    }
+
+    .payment-detail-panel {
+        @apply rounded-[24px] border bg-[var(--surface-muted)] p-4;
+        border-color: var(--line);
+    }
+
     .status-available {
         background: rgba(109, 139, 116, 0.14);
         color: #4d6d55;

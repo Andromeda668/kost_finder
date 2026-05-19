@@ -9,6 +9,7 @@ use App\Http\Controllers\KostController;
 use App\Http\Controllers\OwnerBookingController;
 use App\Http\Controllers\OwnerDashboardController;
 use App\Http\Controllers\OwnerKostController;
+use App\Http\Controllers\PaymentWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -43,4 +44,10 @@ Route::prefix('owner')->name('owner.')->middleware(['auth', 'owner'])->group(fun
     Route::get('/bookings', [OwnerBookingController::class, 'index'])->name('bookings.index');
     Route::get('/riwayat', [OwnerBookingController::class, 'history'])->name('history');
     Route::patch('/bookings/{booking}/status', [BookingController::class, 'updateStatus'])->name('bookings.status');
+    Route::patch('/bookings/{booking}/payment-status', [BookingController::class, 'updatePaymentStatus'])->name('bookings.payment-status');
+    Route::get('/bookings/pembayaran', [OwnerBookingController::class, 'payments'])->name('bookings.payments');
+    Route::get('/bookings/{booking}/review', [OwnerBookingController::class, 'review'])->name('bookings.review');
 });
+
+// Payment gateway webhook (provider will call this URL)
+Route::post('/webhooks/payment', [PaymentWebhookController::class, 'handle'])->name('webhooks.payment');
