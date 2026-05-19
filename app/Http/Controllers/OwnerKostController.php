@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class OwnerKostController extends Controller
@@ -163,6 +164,8 @@ class OwnerKostController extends Controller
             'images' => ['nullable', 'array', 'min:1', 'max:8'],
             'images.*' => ['image', 'max:2048'],
         ], [
+            'payment_methods' => ['required', 'array', 'min:1'],
+            'payment_methods.*' => ['string', Rule::in(Kost::PAYMENT_METHODS)],
             'nama_kost.required' => 'Nama kost wajib diisi.',
             'alamat.required' => 'Alamat wajib diisi.',
             'lokasi.required' => 'Lokasi wajib diisi.',
@@ -190,6 +193,10 @@ class OwnerKostController extends Controller
             'qris_image.max' => 'Ukuran QRIS maksimal 2 MB.',
             'thumbnail_image.image' => 'File thumbnail harus berupa gambar.',
             'thumbnail_image.max' => 'Ukuran thumbnail maksimal 2 MB.',
+            'payment_methods.required' => 'Metode pembayaran wajib dipilih.',
+            'payment_methods.array' => 'Metode pembayaran tidak valid.',
+            'payment_methods.min' => 'Minimal pilih 1 metode pembayaran.',
+            'payment_methods.*.in' => 'Metode pembayaran tidak valid.',
         ]);
     }
 

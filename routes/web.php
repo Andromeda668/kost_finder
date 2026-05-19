@@ -44,7 +44,7 @@ Route::prefix('owner')->name('owner.')->middleware(['auth', 'owner'])->group(fun
     Route::get('/bookings', [OwnerBookingController::class, 'index'])->name('bookings.index');
     Route::get('/riwayat', [OwnerBookingController::class, 'history'])->name('history');
     Route::patch('/bookings/{booking}/status', [BookingController::class, 'updateStatus'])->name('bookings.status');
-    Route::patch('/bookings/{booking}/payment-status', [BookingController::class, 'updatePaymentStatus'])->name('bookings.payment-status');
+    Route::patch('/bookings/{booking}/payment-status', [OwnerBookingController::class, 'updatePaymentStatus'])->name('bookings.payment-status');
     Route::get('/bookings/pembayaran', [OwnerBookingController::class, 'payments'])->name('bookings.payments');
     Route::get('/bookings/{booking}/review', [OwnerBookingController::class, 'review'])->name('bookings.review');
 });

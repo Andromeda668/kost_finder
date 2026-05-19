@@ -89,12 +89,14 @@ class BookingController extends Controller
             'tanggal_masuk' => $validated['tanggal_masuk'],
             'tipe_sewa' => $validated['tipe_sewa'],
             'durasi' => (int) $validated['durasi'],
+
             'durasi_bulan' => $validated['tipe_sewa'] === 'bulanan' ? (int) $validated['durasi'] : 0,
             'payment_method' => $validated['payment_method'],
             'payment_status' => Booking::PAYMENT_UNPAID,
             'payment_proof_data' => $paymentProof ? base64_encode(file_get_contents($paymentProof->getRealPath())) : null,
             'payment_proof_mime_type' => $paymentProof?->getMimeType(),
             'status' => Booking::STATUS_PENDING,
+            'payment_method' => $validated['payment_method'],
             'created_at' => now(),
         ]);
 
