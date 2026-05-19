@@ -20,6 +20,8 @@ class Booking extends Model
         'user_id',
         'kost_id',
         'tanggal_masuk',
+        'tipe_sewa',
+        'durasi',
         'durasi_bulan',
         'status',
         'created_at',
@@ -29,9 +31,20 @@ class Booking extends Model
     {
         return [
             'tanggal_masuk' => 'date',
+            'durasi' => 'integer',
             'durasi_bulan' => 'integer',
             'created_at' => 'datetime',
         ];
+    }
+
+    public function getDurasiLabelAttribute(): string
+    {
+        $duration = (int) ($this->durasi ?: $this->durasi_bulan ?: 1);
+        $type = $this->tipe_sewa ?: 'bulanan';
+
+        return $type === 'harian'
+            ? $duration.' hari'
+            : $duration.' bulan';
     }
 
     public function user(): BelongsTo

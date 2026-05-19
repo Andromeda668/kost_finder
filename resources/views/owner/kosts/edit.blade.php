@@ -4,7 +4,7 @@
 
 @section('content')
     <section class="form-card mx-auto max-w-5xl">
-        <p class="eyebrow">Dashboard Owner</p>
+        <p class="eyebrow">Kelola Kost</p>
         <h1 class="font-display text-4xl font-semibold">Edit Data Kost</h1>
         <p class="mt-3 text-base leading-8 text-[var(--muted)]">Perbarui informasi kost agar calon penyewa selalu melihat data terbaru.</p>
 

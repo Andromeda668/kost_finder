@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Kost;
-use App\Models\Booking;
 use App\Models\Room;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,31 +20,8 @@ class OwnerKostController extends Controller
             ->latest()
             ->paginate(10);
 
-        $totalKosts = $request->user()->kosts()->count();
-
-        $roomSummary = Room::query()
-            ->whereHas('kost', fn ($query) => $query->where('user_id', $request->user()->id))
-            ->selectRaw('SUM(total_kamar) as total_kamar, SUM(kamar_tersedia) as kamar_tersedia')
-            ->first();
-
-        $pendingBookings = Booking::query()
-            ->whereHas('kost', fn ($query) => $query->where('user_id', $request->user()->id))
-            ->where('status', Booking::STATUS_PENDING)
-            ->count();
-
-        $bookings = Booking::query()
-            ->with(['user', 'kost.primaryImage'])
-            ->whereHas('kost', fn ($query) => $query->where('user_id', $request->user()->id))
-            ->latest('created_at')
-            ->paginate(8, ['*'], 'booking_page');
-
         return view('owner.kosts.index', [
             'kosts' => $kosts,
-            'bookings' => $bookings,
-            'totalKosts' => $totalKosts,
-            'availableRooms' => $roomSummary->kamar_tersedia ?? 0,
-            'totalRooms' => $roomSummary->total_kamar ?? 0,
-            'pendingBookings' => $pendingBookings,
         ]);
     }
 
@@ -77,6 +53,8 @@ class OwnerKostController extends Controller
                 'total_kamar' => (int) $validated['total_kamar'],
                 'kamar_tersedia' => (int) $validated['kamar_tersedia'],
             ]);
+
+            $this->syncNearbyPlaces($kost, $validated['nearby_places'] ?? []);
         });
 
         return redirect()
@@ -87,7 +65,7 @@ class OwnerKostController extends Controller
     public function edit(Request $request, Kost $kost): View
     {
         $this->authorizeOwner($request, $kost);
-        $kost->load(['primaryImage', 'owner.ownerContact', 'room']);
+        $kost->load(['primaryImage', 'owner.ownerContact', 'room', 'nearbyPlaces']);
 
         return view('owner.kosts.edit', [
             'kost' => $kost,
@@ -123,6 +101,8 @@ class OwnerKostController extends Controller
             $this->storeImages($kost, $validated['images']);
         }
 
+        $this->syncNearbyPlaces($kost, $validated['nearby_places'] ?? []);
+
         return redirect()
             ->route('owner.kosts.index')
             ->with('status', 'Data kost berhasil diperbarui.');
@@ -147,27 +127,34 @@ class OwnerKostController extends Controller
             'nama_kost' => ['required', 'string', 'max:255'],
             'alamat' => ['required', 'string'],
             'lokasi' => ['required', 'string', 'max:255'],
-            'google_maps_link' => ['required', 'url', 'max:1000'],
-            'harga' => ['required', 'string', 'regex:/^Rp [\d\.]+$/', 'min:3'],
+            'google_maps_link' => ['nullable', 'url', 'max:1000'],
+            'currency' => ['required', 'string', 'size:3', 'in:IDR,USD,EUR,SGD,MYR'],
+            'harga_bulanan' => ['nullable', 'string', 'max:30', 'required_without:harga_harian'],
+            'harga_harian' => ['nullable', 'string', 'max:30', 'required_without:harga_bulanan'],
             'deskripsi' => ['required', 'string'],
-            'fasilitas' => ['required', 'string'],
+            'fasilitas' => ['nullable', 'string'],
+            'fasilitas_items' => ['nullable', 'array', 'max:40'],
+            'fasilitas_items.*' => ['nullable', 'string', 'max:80'],
             'total_kamar' => ['required', 'integer', 'min:1', 'max:500'],
             'kamar_tersedia' => ['required', 'integer', 'min:0', 'lte:total_kamar'],
             'phone' => ['required', 'string', 'max:30'],
             'contact_email' => ['required', 'email', 'max:255'],
+            'nearby_places' => ['nullable', 'array', 'max:8'],
+            'nearby_places.*.label' => ['required_with:nearby_places', 'string', 'max:255'],
+            'nearby_places.*.category' => ['nullable', 'string', 'max:30'],
+            'nearby_places.*.google_maps_link' => ['nullable', 'url', 'max:2048'],
+            'nearby_places.*.distance_km' => ['required_with:nearby_places', 'numeric', 'min:0.1', 'max:999.99'],
             'images' => [$imageRequired ? 'required' : 'nullable', 'array', 'min:1', 'max:8'],
             'images.*' => ['image', 'max:2048'],
         ], [
             'nama_kost.required' => 'Nama kost wajib diisi.',
             'alamat.required' => 'Alamat wajib diisi.',
             'lokasi.required' => 'Lokasi wajib diisi.',
-            'google_maps_link.required' => 'Link Google Maps wajib diisi.',
             'google_maps_link.url' => 'Link Google Maps harus berupa URL yang valid.',
-            'harga.required' => 'Harga sewa wajib diisi.',
-            'harga.regex' => 'Format harga tidak valid (contoh: Rp 1.000.000).',
-            'harga.min' => 'Harga sewa minimal Rp 100.',
+            'currency.required' => 'Mata uang wajib dipilih.',
+            'harga_bulanan.required_without' => 'Isi harga bulanan atau harga harian.',
+            'harga_harian.required_without' => 'Isi harga harian atau harga bulanan.',
             'deskripsi.required' => 'Deskripsi wajib diisi.',
-            'fasilitas.required' => 'Fasilitas wajib diisi.',
             'total_kamar.required' => 'Total kamar wajib diisi.',
             'total_kamar.min' => 'Total kamar minimal 1.',
             'kamar_tersedia.required' => 'Kamar tersedia wajib diisi.',
@@ -186,15 +173,56 @@ class OwnerKostController extends Controller
 
     protected function kostPayload(array $validated): array
     {
+        $monthly = $this->sanitizeMoney($validated['harga_bulanan'] ?? null);
+        $daily = $this->sanitizeMoney($validated['harga_harian'] ?? null);
+
+        $facilitiesItems = collect($validated['fasilitas_items'] ?? [])
+            ->map(fn ($item) => trim((string) $item))
+            ->filter()
+            ->values();
+
+        $facilitiesText = trim((string) ($validated['fasilitas'] ?? ''));
+        if ($facilitiesItems->isNotEmpty()) {
+            $facilitiesText = $facilitiesItems->implode("\n");
+        }
+
+        if ($facilitiesText === '') {
+            abort(422, 'Minimal tambahkan 1 fasilitas.');
+        }
+
+        $mapsLink = trim((string) ($validated['google_maps_link'] ?? ''));
+        if ($mapsLink === '') {
+            $mapsLink = 'https://www.google.com/maps?q='.rawurlencode(trim($validated['alamat'].' '.$validated['lokasi']));
+        }
+
         return [
             'nama_kost' => $validated['nama_kost'],
             'alamat' => $validated['alamat'],
             'lokasi' => $validated['lokasi'],
-            'google_maps_link' => $validated['google_maps_link'],
-            'harga' => (int) str_replace(['Rp ', '.'], '', $validated['harga']),
+            'google_maps_link' => $mapsLink,
+            'currency' => strtoupper($validated['currency']),
+            'harga_harian' => $daily ?: null,
+            'harga_bulanan' => $monthly ?: null,
+            // Backward-compat: `harga` tetap dipakai oleh beberapa query lama.
+            'harga' => (int) ($monthly ?: $daily ?: 0),
             'deskripsi' => $validated['deskripsi'],
-            'fasilitas' => $validated['fasilitas'],
+            'fasilitas' => $facilitiesText,
         ];
+    }
+
+    protected function sanitizeMoney(?string $input): ?int
+    {
+        if (! $input) {
+            return null;
+        }
+
+        $digits = preg_replace('/\D+/', '', $input);
+
+        if (! $digits) {
+            return null;
+        }
+
+        return max((int) $digits, 0);
     }
 
     protected function authorizeOwner(Request $request, Kost $kost): void
@@ -223,6 +251,28 @@ class OwnerKostController extends Controller
             }
 
             $image->delete();
+        }
+    }
+
+    protected function syncNearbyPlaces(Kost $kost, array $nearbyPlaces): void
+    {
+        $kost->nearbyPlaces()->delete();
+
+        $payload = collect($nearbyPlaces)
+            ->filter(fn ($place) => ! empty($place['label']) && ! empty($place['distance_km']))
+            ->map(fn ($place) => [
+                'label' => (string) $place['label'],
+                'category' => (string) ($place['category'] ?? 'lainnya'),
+                'google_maps_link' => ! empty($place['google_maps_link']) ? (string) $place['google_maps_link'] : null,
+                'distance_km' => (float) $place['distance_km'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ])
+            ->values()
+            ->all();
+
+        if ($payload) {
+            $kost->nearbyPlaces()->insert($payload);
         }
     }
 }

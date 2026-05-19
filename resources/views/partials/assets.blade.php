@@ -105,6 +105,41 @@
         .facility-grid { display: grid; gap: .75rem; margin-top: 1.25rem; }
         .facility-tile { display: flex; align-items: center; gap: .75rem; border-radius: 22px; background: var(--surface-muted); padding: 1rem; }
         .facility-icon { background: rgba(106,122,82,.16); color: var(--olive); }
+        .price-stack { margin-top: .5rem; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .75rem; }
+        .price-value { font-family: 'Fraunces', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; font-weight: 700; color: var(--ink); line-height: 1.05; white-space: nowrap; font-size: clamp(1.9rem, 5vw, 2.45rem); }
+        .price-period { font-size: .875rem; color: var(--muted); white-space: nowrap; }
+        .nearby-row { display: grid; gap: .75rem; align-items: center; }
+        @media (min-width: 640px) { .nearby-row { grid-template-columns: minmax(0,1.4fr) 180px 140px auto; } }
+        .wizard-shell { border-radius: 28px; border: 1px solid var(--line); background: #fff; padding: 1rem; box-shadow: 0 10px 30px rgba(15,23,42,0.05); }
+        .wizard-progress { height: 8px; overflow: hidden; border-radius: 999px; background: var(--surface-muted); }
+        .wizard-progress-bar { height: 100%; width: 0%; border-radius: 999px; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width .25s ease; }
+        .wizard-steps { margin-top: 1rem; display: grid; gap: .5rem; }
+        @media (min-width: 640px) { .wizard-steps { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+        .wizard-step { border-radius: 18px; border: 1px solid var(--line); background: #fff; padding: .75rem 1rem; text-align: left; font-size: .875rem; font-weight: 700; color: var(--muted); }
+        .wizard-step-active { background: var(--secondary); color: var(--primary-deep); border-color: rgba(15,118,110,.22); }
+        .wizard-panel { margin-top: 1.5rem; border-radius: 30px; border: 1px solid var(--line); background: #fff; padding: 1.25rem; }
+        .upload-drop { cursor: pointer; border-radius: 28px; border: 1px solid rgba(15,118,110,.12); background: var(--surface-muted); padding: 1.5rem; transition: background .2s ease, border-color .2s ease; }
+        .upload-drop:hover { border-color: rgba(15,118,110,.22); background: rgba(15,118,110,.04); }
+        .upload-drop-inner { text-align: center; }
+        .owner-mini-cover { width: 48px; height: 48px; border-radius: 16px; object-fit: cover; flex-shrink: 0; display: block; }
+        .owner-card-row { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+        .owner-kost-grid { display: grid; gap: 1.25rem; }
+        @media (min-width: 1024px) { .owner-kost-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        .owner-kost-card-compact .home-kost-media { height: 150px; }
+        .owner-kost-card-compact .home-kost-body { padding: 1.25rem; }
+        .owner-kost-card-compact .home-kost-footer { margin-top: 1rem; padding-top: 1rem; }
+        .owner-kost-list { display: grid; gap: 1.5rem; }
+        .owner-kost-item { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem; border-radius: 28px; border: 1px solid var(--line); background: #fff; padding: 1.25rem; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08); }
+        @media (min-width: 768px) { .owner-kost-item { flex-wrap: nowrap; } }
+        .owner-kost-left { display: flex; min-width: 0; align-items: center; gap: 1rem; }
+        .owner-kost-thumb { width: 72px; height: 72px; border-radius: 22px; overflow: hidden; flex-shrink: 0; background: var(--surface-muted); border: 1px solid rgba(15,118,110,0.08); }
+        .owner-kost-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .owner-kost-center { min-width: 0; }
+        .owner-kost-title { font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 44ch; }
+        .owner-kost-subtitle { margin-top: .25rem; font-size: .75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 54ch; }
+        .owner-kost-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; font-size: .875rem; color: var(--muted); }
+        .owner-kost-meta strong { color: var(--ink); }
+        .owner-kost-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .5rem; }
         .status-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: .55rem 1rem; font-size: .875rem; font-weight: 600; }
         .status-available { background: rgba(106,122,82,.14); color: #4d6d55; }
         .status-limited { background: rgba(228,182,87,.18); color: #93691a; }

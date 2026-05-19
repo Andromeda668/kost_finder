@@ -41,14 +41,34 @@ class BookingController extends Controller
 
         $validated = $request->validate([
             'tanggal_masuk' => ['required', 'date', 'after_or_equal:today'],
-            'durasi_bulan' => ['required', 'integer', 'min:1', 'max:24'],
+            'tipe_sewa' => ['required', 'in:harian,bulanan'],
+            'durasi' => ['required', 'integer', 'min:1', 'max:365'],
         ], [
             'tanggal_masuk.required' => 'Tanggal masuk wajib diisi.',
             'tanggal_masuk.after_or_equal' => 'Tanggal masuk tidak boleh sebelum hari ini.',
-            'durasi_bulan.required' => 'Durasi sewa wajib diisi.',
-            'durasi_bulan.min' => 'Durasi minimal 1 bulan.',
-            'durasi_bulan.max' => 'Durasi maksimal 24 bulan.',
+            'tipe_sewa.required' => 'Pilih tipe sewa.',
+            'durasi.required' => 'Durasi sewa wajib diisi.',
+            'durasi.min' => 'Durasi minimal 1.',
+            'durasi.max' => 'Durasi terlalu besar.',
         ]);
+
+        if ($validated['tipe_sewa'] === 'bulanan' && (int) $validated['durasi'] > 24) {
+            return back()->withInput()->withErrors([
+                'durasi' => 'Durasi bulanan maksimal 24 bulan.',
+            ]);
+        }
+
+        if ($validated['tipe_sewa'] === 'harian' && ! $kost->priceFor('harian')) {
+            return back()->withInput()->withErrors([
+                'tipe_sewa' => 'Kost ini belum menyediakan harga harian.',
+            ]);
+        }
+
+        if ($validated['tipe_sewa'] === 'bulanan' && ! $kost->priceFor('bulanan')) {
+            return back()->withInput()->withErrors([
+                'tipe_sewa' => 'Kost ini belum menyediakan harga bulanan.',
+            ]);
+        }
 
         if (($kost->room?->kamar_tersedia ?? 0) < 1) {
             return back()->withInput()->with('status', 'Maaf, kost ini sedang penuh dan belum bisa dibooking.');
@@ -58,7 +78,9 @@ class BookingController extends Controller
             'user_id' => $request->user()->id,
             'kost_id' => $kost->id,
             'tanggal_masuk' => $validated['tanggal_masuk'],
-            'durasi_bulan' => (int) $validated['durasi_bulan'],
+            'tipe_sewa' => $validated['tipe_sewa'],
+            'durasi' => (int) $validated['durasi'],
+            'durasi_bulan' => $validated['tipe_sewa'] === 'bulanan' ? (int) $validated['durasi'] : 0,
             'status' => Booking::STATUS_PENDING,
             'created_at' => now(),
         ]);

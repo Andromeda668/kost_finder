@@ -39,7 +39,7 @@ class AuthenticatedSessionController extends Controller
         $user = $request->user();
 
         if ($user->isOwner()) {
-            return redirect()->intended(route('owner.kosts.index'));
+            return redirect()->intended(route('owner.dashboard'));
         }
 
         return redirect()->intended(route('home'));

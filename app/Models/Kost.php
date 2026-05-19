@@ -21,7 +21,10 @@ class Kost extends Model
         'alamat',
         'lokasi',
         'google_maps_link',
+        'currency',
         'harga',
+        'harga_harian',
+        'harga_bulanan',
         'deskripsi',
         'fasilitas',
     ];
@@ -30,6 +33,8 @@ class Kost extends Model
     {
         return [
             'harga' => 'integer',
+            'harga_harian' => 'integer',
+            'harga_bulanan' => 'integer',
         ];
     }
 
@@ -68,6 +73,55 @@ class Kost extends Model
         return $this->hasMany(Booking::class);
     }
 
+    public function nearbyPlaces(): HasMany
+    {
+        return $this->hasMany(NearbyPlace::class);
+    }
+
+    public function getCurrencySymbolAttribute(): string
+    {
+        return match (strtoupper((string) $this->currency)) {
+            'USD' => '$',
+            'EUR' => '€',
+            'SGD' => 'S$',
+            'MYR' => 'RM',
+            default => 'Rp',
+        };
+    }
+
+    public function priceFor(string $period): ?int
+    {
+        return match ($period) {
+            'harian' => $this->harga_harian,
+            'bulanan' => $this->harga_bulanan ?? $this->harga,
+            default => $this->harga_bulanan ?? $this->harga,
+        };
+    }
+
+    public function getPrimaryRentalPeriodAttribute(): string
+    {
+        if ($this->harga_bulanan) {
+            return 'bulanan';
+        }
+
+        if ($this->harga_harian) {
+            return 'harian';
+        }
+
+        return 'bulanan';
+    }
+
+    public function formatMoney(?int $amount): string
+    {
+        $amount = (int) ($amount ?? 0);
+
+        if (strtoupper((string) $this->currency) === 'IDR') {
+            return number_format($amount, 0, ',', '.');
+        }
+
+        return number_format($amount, 0, '.', ',');
+    }
+
     public function scopeSearch(Builder $query, ?string $term): Builder
     {
         if (! $term) {
@@ -88,16 +142,25 @@ class Kost extends Model
             return $query;
         }
 
-        // Parse if it's a formatted string like "Rp 1.000.000"
-        if (is_string($maxPrice) && str_starts_with($maxPrice, 'Rp ')) {
-            $maxPrice = str_replace(['Rp ', '.'], '', $maxPrice);
+        if (is_string($maxPrice)) {
+            $maxPrice = preg_replace('/\D+/', '', $maxPrice);
         }
 
         if (! is_numeric($maxPrice)) {
             return $query;
         }
 
-        return $query->where('harga', '<=', (int) $maxPrice);
+        $value = (int) $maxPrice;
+
+        return $query->where(function (Builder $builder) use ($value): void {
+            $builder
+                ->where(function (Builder $inner) use ($value): void {
+                    $inner->whereNotNull('harga_bulanan')->where('harga_bulanan', '<=', $value);
+                })
+                ->orWhere(function (Builder $inner) use ($value): void {
+                    $inner->whereNull('harga_bulanan')->where('harga', '<=', $value);
+                });
+        });
     }
 
     public function getAvailabilityStatusAttribute(): string

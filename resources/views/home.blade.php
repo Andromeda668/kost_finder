@@ -159,7 +159,11 @@
 
                             <div class="home-kost-footer">
                                 <div>
-                                    <p class="home-price">Rp {{ number_format($kost->harga, 0, ',', '.') }}</p>
+                                    @php
+                                        $period = $kost->primary_rental_period;
+                                        $price = $kost->priceFor($period);
+                                    @endphp
+                                    <p class="home-price">{{ $kost->currency_symbol }} {{ $kost->formatMoney($price) }} <span class="text-xs text-[var(--muted)]">/ {{ $period === 'harian' ? 'hari' : 'bulan' }}</span></p>
                                     <span>per bulan</span>
                                 </div>
 

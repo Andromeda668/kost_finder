@@ -46,7 +46,7 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         return $user->isOwner()
-            ? redirect()->route('owner.kosts.index')->with('status', 'Registrasi owner berhasil. Sekarang Anda bisa menambahkan kost pertama.')
+            ? redirect()->route('owner.dashboard')->with('status', 'Registrasi owner berhasil. Sekarang Anda bisa menambahkan kost pertama.')
             : redirect()->route('home')->with('status', 'Registrasi berhasil. Silakan mulai cari kost yang cocok.');
     }
 }

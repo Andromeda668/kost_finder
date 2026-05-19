@@ -36,7 +36,7 @@
                             <span class="{{ $booking->kost->availability_badge_class }}">{{ $booking->kost->availability_status }}</span>
                         </div>
                         <p class="mt-3 text-sm text-[var(--muted)]">{{ $booking->kost->lokasi }} | {{ $booking->kost->alamat }}</p>
-                        <p class="mt-2 text-sm text-[var(--muted)]">Tanggal masuk: {{ $booking->tanggal_masuk->translatedFormat('d F Y') }} | Durasi: {{ $booking->durasi_bulan }} bulan</p>
+                        <p class="mt-2 text-sm text-[var(--muted)]">Tanggal masuk: {{ $booking->tanggal_masuk->translatedFormat('d F Y') }} | Durasi: {{ $booking->durasi_label }}</p>
                         <p class="mt-2 text-sm text-[var(--olive)]">Kamar tersedia saat ini: {{ $booking->kost->room?->kamar_tersedia ?? 0 }} / {{ $booking->kost->room?->total_kamar ?? 0 }}</p>
                     </div>
 

@@ -6,6 +6,8 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\KostController;
+use App\Http\Controllers\OwnerBookingController;
+use App\Http\Controllers\OwnerDashboardController;
 use App\Http\Controllers\OwnerKostController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,11 +32,15 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::prefix('owner')->name('owner.')->middleware(['auth', 'owner'])->group(function () {
+    Route::get('/', [OwnerDashboardController::class, 'index'])->name('dashboard');
+    Route::redirect('/dashboard', '/owner')->name('dashboard.redirect');
     Route::get('/kosts', [OwnerKostController::class, 'index'])->name('kosts.index');
     Route::get('/kosts/create', [OwnerKostController::class, 'create'])->name('kosts.create');
     Route::post('/kosts', [OwnerKostController::class, 'store'])->name('kosts.store');
     Route::get('/kosts/{kost}/edit', [OwnerKostController::class, 'edit'])->name('kosts.edit');
     Route::put('/kosts/{kost}', [OwnerKostController::class, 'update'])->name('kosts.update');
     Route::delete('/kosts/{kost}', [OwnerKostController::class, 'destroy'])->name('kosts.destroy');
+    Route::get('/bookings', [OwnerBookingController::class, 'index'])->name('bookings.index');
+    Route::get('/riwayat', [OwnerBookingController::class, 'history'])->name('history');
     Route::patch('/bookings/{booking}/status', [BookingController::class, 'updateStatus'])->name('bookings.status');
 });

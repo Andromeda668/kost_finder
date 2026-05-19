@@ -81,18 +81,18 @@ class KostFinderTest extends TestCase
     {
         $owner = User::factory()->create(['role' => User::ROLE_OWNER]);
 
-        $response = $this->actingAs($owner)->get(route('owner.kosts.index'));
+        $response = $this->actingAs($owner)->get(route('owner.dashboard'));
 
         $response->assertOk();
         $response->assertSee('Dashboard Owner');
-        $response->assertSee('Daftar kost Anda');
+        $response->assertSee('Permintaan Booking');
     }
 
     public function test_regular_user_cannot_access_owner_dashboard(): void
     {
         $user = User::factory()->create(['role' => User::ROLE_USER]);
 
-        $response = $this->actingAs($user)->get(route('owner.kosts.index'));
+        $response = $this->actingAs($user)->get(route('owner.dashboard'));
 
         $response->assertForbidden();
     }
@@ -105,7 +105,8 @@ class KostFinderTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('bookings.store', $kost), [
             'tanggal_masuk' => now()->addDays(3)->toDateString(),
-            'durasi_bulan' => 3,
+            'tipe_sewa' => 'bulanan',
+            'durasi' => 3,
         ]);
 
         $response->assertRedirect(route('kosts.show', $kost));

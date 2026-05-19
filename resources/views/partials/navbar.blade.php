@@ -15,12 +15,13 @@
         </button>
 
         <nav class="hidden items-center gap-2 md:flex" data-nav-menu>
-            <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'nav-link-active' : '' }}">Cari Kost</a>
-
             @auth
                 @if (auth()->user()->isOwner())
-                    <a href="{{ route('owner.kosts.index') }}" class="nav-link {{ request()->routeIs('owner.*') ? 'nav-link-active' : '' }}">Dashboard Owner</a>
+                    <a href="{{ route('owner.dashboard') }}" class="nav-link {{ request()->routeIs('owner.dashboard') ? 'nav-link-active' : '' }}">Dashboard Owner</a>
+                    <a href="{{ route('owner.history') }}" class="nav-link {{ request()->routeIs('owner.history') ? 'nav-link-active' : '' }}">Riwayat</a>
+                    <a href="{{ route('owner.bookings.index') }}" class="nav-link {{ request()->routeIs('owner.bookings.*') ? 'nav-link-active' : '' }}">Booking</a>
                 @else
+                    <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'nav-link-active' : '' }}">Cari Kost</a>
                     <a href="{{ route('bookings.index') }}" class="nav-link {{ request()->routeIs('bookings.*') ? 'nav-link-active' : '' }}">Booking Saya</a>
                     <a href="{{ route('favorites.index') }}" class="nav-link {{ request()->routeIs('favorites.*') ? 'nav-link-active' : '' }}">Wishlist</a>
                 @endif
@@ -42,7 +43,9 @@
 
             @auth
                 @if (auth()->user()->isOwner())
-                    <a href="{{ route('owner.kosts.index') }}" class="mobile-link">Dashboard Owner</a>
+                    <a href="{{ route('owner.dashboard') }}" class="mobile-link">Dashboard Owner</a>
+                    <a href="{{ route('owner.history') }}" class="mobile-link">Riwayat</a>
+                    <a href="{{ route('owner.bookings.index') }}" class="mobile-link">Booking</a>
                 @else
                     <a href="{{ route('bookings.index') }}" class="mobile-link">Booking Saya</a>
                     <a href="{{ route('favorites.index') }}" class="mobile-link">Wishlist</a>

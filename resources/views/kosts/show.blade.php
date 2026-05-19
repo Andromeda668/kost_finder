@@ -11,6 +11,11 @@
         $ownerEmail = $contact?->email ?? $kost->owner?->email;
         $facilities = collect(preg_split('/\r\n|\r|\n/', $kost->fasilitas) ?: [])->filter()->values();
         $isFavorited = (bool) ($kost->is_favorited ?? false);
+        $nearbyPlaces = $kost->nearbyPlaces?->sortBy('distance_km')->values() ?? collect();
+        $monthlyPrice = $kost->priceFor('bulanan');
+        $dailyPrice = $kost->priceFor('harian');
+        $primaryPeriod = $kost->primary_rental_period;
+        $primaryPrice = $kost->priceFor($primaryPeriod);
     @endphp
 
     <section class="page-heading" data-reveal>
@@ -67,12 +72,29 @@
                 <div class="facility-grid">
                     @foreach ($facilities as $facility)
                         <div class="facility-tile">
-                            <span class="facility-icon">OK</span>
+                            <span class="facility-icon" aria-hidden="true">✓</span>
                             <span>{{ trim($facility) }}</span>
                         </div>
                     @endforeach
                 </div>
             </article>
+
+            @if ($nearbyPlaces->count())
+                <article class="content-card" data-reveal>
+                    <h2 class="section-title">Dekat dengan</h2>
+                    <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                        @foreach ($nearbyPlaces as $place)
+                            <div class="facility-tile">
+                                <span class="facility-icon" aria-hidden="true">✓</span>
+                                <div class="grid gap-0.5">
+                                    <span class="font-medium text-[var(--ink)]">{{ $place->label }}</span>
+                                    <span class="text-xs text-[var(--muted)]">{{ number_format((float) $place->distance_km, 1, ',', '.') }} km • {{ ucfirst($place->category) }}</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </article>
+            @endif
 
             <article class="content-card" data-reveal>
                 <div class="mb-4 flex items-center justify-between gap-4">
@@ -94,10 +116,27 @@
         <aside class="sticky-panel">
             <div class="booking-sticky-card" data-reveal>
                 <p class="text-sm font-medium text-[var(--muted)]">Harga sewa</p>
-                <div class="mt-2 flex items-end justify-between gap-3">
-                    <p class="font-display text-4xl font-semibold text-[var(--ink)]">Rp {{ number_format($kost->harga, 0, ',', '.') }}</p>
-                    <span class="text-sm text-[var(--muted)]">/ bulan</span>
+                <div class="price-stack">
+                    <p class="price-value">{{ $kost->currency_symbol }} {{ $kost->formatMoney($primaryPrice) }}</p>
+                    <span class="price-period">/ {{ $primaryPeriod === 'harian' ? 'hari' : 'bulan' }}</span>
                 </div>
+
+                @if ($monthlyPrice || $dailyPrice)
+                    <div class="mt-3 grid gap-2 text-sm text-[var(--muted)]">
+                        @if ($dailyPrice)
+                            <div class="flex items-center justify-between gap-3">
+                                <span>Harian</span>
+                                <span class="font-semibold text-[var(--ink)]">{{ $kost->currency_symbol }} {{ $kost->formatMoney($dailyPrice) }}</span>
+                            </div>
+                        @endif
+                        @if ($monthlyPrice)
+                            <div class="flex items-center justify-between gap-3">
+                                <span>Bulanan</span>
+                                <span class="font-semibold text-[var(--ink)]">{{ $kost->currency_symbol }} {{ $kost->formatMoney($monthlyPrice) }}</span>
+                            </div>
+                        @endif
+                    </div>
+                @endif
 
                 <div class="mt-6 space-y-4 rounded-[28px] bg-[var(--surface-muted)] p-5">
                     <div class="flex items-center justify-between gap-3">
@@ -119,7 +158,7 @@
                 <div class="mt-6 space-y-3">
                     @auth
                         @if (! auth()->user()->isOwner() || auth()->id() !== $kost->user_id)
-                            <a href="{{ route('bookings.create', $kost) }}" class="solid-button flex w-full items-center justify-center text-center">
+                            <a href="{{ route('bookings.create', $kost) }}?tipe_sewa={{ $primaryPeriod }}" class="solid-button flex w-full items-center justify-center text-center">
                                 Booking Sekarang
                             </a>
                         @endif

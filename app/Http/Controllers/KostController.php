@@ -9,7 +9,7 @@ class KostController extends Controller
 {
     public function show(Kost $kost): View
     {
-        $kost->load(['owner.ownerContact', 'images', 'primaryImage', 'room']);
+        $kost->load(['owner.ownerContact', 'images', 'primaryImage', 'room', 'nearbyPlaces']);
 
         if (auth()->check() && ! auth()->user()->isOwner()) {
             $kost->loadExists([

@@ -37,7 +37,11 @@
                 </div>
 
                 <div class="search-result-side">
-                    <p class="search-result-price">Rp {{ number_format($kost->harga, 0, ',', '.') }}</p>
+                    @php
+                        $period = $kost->primary_rental_period;
+                        $price = $kost->priceFor($period);
+                    @endphp
+                    <p class="search-result-price">{{ $kost->currency_symbol }} {{ $kost->formatMoney($price) }} <span class="text-xs text-[var(--muted)]">/ {{ $period === 'harian' ? 'hari' : 'bulan' }}</span></p>
                     <div class="space-y-3">
                         <a href="{{ route('kosts.show', $kost) }}" class="solid-button w-full text-center">Lihat Detail</a>
                         <form action="{{ route('favorites.toggle', $kost) }}" method="POST">
