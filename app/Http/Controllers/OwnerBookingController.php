@@ -109,14 +109,14 @@ class OwnerBookingController extends Controller
         abort_unless($booking->kost->user_id === $request->user()->id, 403, 'Anda tidak berhak mengelola booking ini.');
 
         $validated = $request->validate([
-            'is_paid' => ['required', 'boolean'],
+            'payment_status' => ['required', 'in:' . Booking::PAYMENT_UNPAID . ',' . Booking::PAYMENT_PAID],
         ]);
 
         if ($booking->status !== Booking::STATUS_ACCEPTED) {
             return back()->with('status', 'Status pembayaran hanya bisa diubah untuk booking yang sudah diterima.');
         }
 
-        $booking->update(['is_paid' => $validated['is_paid']]);
+        $booking->update(['payment_status' => $validated['payment_status']]);
 
         return back()->with('status', 'Status pembayaran booking berhasil diperbarui.');
     }

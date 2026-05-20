@@ -685,8 +685,16 @@
     }
 
     .gallery-nav-button {
-        @apply absolute top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border bg-white/90 text-3xl font-semibold leading-none text-[var(--ink)] shadow-sm transition hover:bg-white;
-        border-color: var(--line);
+        @apply absolute top-1/2 flex h-14 w-14 -translate-y-1/2 items-center justify-center rounded-full border bg-white/95 text-3xl font-semibold leading-none text-[var(--ink)] shadow-[0_24px_40px_rgba(15,23,42,0.14)] transition duration-200 ease-out;
+        border-color: rgba(15, 23, 42, 0.08);
+        backdrop-filter: blur(10px);
+    }
+
+    .gallery-nav-button:hover {
+        @apply scale-105;
+        background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+        color: #fff;
+        border-color: transparent;
     }
 
     .gallery-nav-prev {

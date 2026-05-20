@@ -145,14 +145,15 @@
         .owner-kost-price { text-align: right; }
         .owner-kost-price p:first-child { color: var(--muted); font-size: .75rem; }
         .owner-kost-price p:last-child { margin-top: .25rem; color: var(--primary); font-size: 1.125rem; font-weight: 800; }
-        .owner-kost-buttons { display: flex; width: 100%; flex-direction: column; gap: .5rem; }
-        .owner-kost-buttons a, .owner-kost-buttons button { border-radius: 12px; padding: .5rem .75rem; font-size: .75rem; font-weight: 700; text-align: center; }
+        .owner-kost-buttons { display: flex; align-items: stretch; width: 100%; flex-direction: column; gap: .5rem; }
+        .owner-kost-buttons a, .owner-kost-buttons button { display: block; width: 100%; border-radius: 12px; padding: .5rem .75rem; font-size: .75rem; font-weight: 700; text-align: center; }
         .owner-kost-buttons .solid-button, .owner-kost-buttons .ghost-button { min-height: auto; box-shadow: none; }
         @media (max-width: 768px) {
             .owner-kost-row { flex-wrap: wrap; }
             .owner-kost-image-wrapper { width: 100px; height: 100px; flex-basis: 100px; }
             .owner-kost-actions { min-width: 100%; flex-basis: 100%; flex-direction: row; align-items: center; }
             .owner-kost-buttons { width: auto; flex-direction: row; }
+            .owner-kost-buttons a, .owner-kost-buttons button { width: auto; }
         }
         .owner-kost-item { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem; border-radius: 28px; border: 1px solid var(--line); background: #fff; padding: 1.25rem; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08); }
         @media (min-width: 768px) { .owner-kost-item { flex-wrap: nowrap; } }

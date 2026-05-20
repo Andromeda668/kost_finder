@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Kost;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class HomeController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
+        if ($request->user()?->isOwner()) {
+            return redirect()->route('owner.dashboard');
+        }
         $allowedSorts = ['latest', 'price_asc', 'price_desc', 'availability'];
         $search = trim((string) $request->string('search'));
         $quickLocation = trim((string) $request->string('quick_location'));

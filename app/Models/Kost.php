@@ -304,9 +304,7 @@ class Kost extends Model
 
     public function getDisplayImageUrlAttribute(): ?string
     {
-        $uploadedImage = $this->primaryImage?->image_url;
-
-        return $uploadedImage ?: $this->google_street_view_image_url;
+        return $this->thumbnail_image_url ?: $this->primaryImage?->image_url ?: $this->google_street_view_image_url;
     }
 
     public function getGoogleStreetViewImageUrlAttribute(): ?string
