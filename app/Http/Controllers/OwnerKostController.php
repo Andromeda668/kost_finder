@@ -84,33 +84,34 @@ class OwnerKostController extends Controller
 
         $validated = $this->validateKost($request, false);
 
-        $kost->update($this->kostPayload($validated));
-        $this->storeQrisImage($request, $kost);
+        DB::transaction(function () use ($request, $validated, $kost) {
+            $kost->update($this->kostPayload($validated));
 
-        $kost->room()->updateOrCreate(
-            ['kost_id' => $kost->id],
-            [
-                'total_kamar' => (int) $validated['total_kamar'],
-                'kamar_tersedia' => min((int) $validated['kamar_tersedia'], (int) $validated['total_kamar']),
-            ]
-        );
+            $kost->room()->updateOrCreate(
+                ['kost_id' => $kost->id],
+                [
+                    'total_kamar' => (int) $validated['total_kamar'],
+                    'kamar_tersedia' => min((int) $validated['kamar_tersedia'], (int) $validated['total_kamar']),
+                ]
+            );
 
-        $request->user()->ownerContact()->updateOrCreate(
-            ['user_id' => $request->user()->id],
-            [
-                'phone' => $validated['phone'],
-                'email' => $validated['contact_email'],
-            ]
-        );
+            $request->user()->ownerContact()->updateOrCreate(
+                ['user_id' => $request->user()->id],
+                [
+                    'phone' => $validated['phone'],
+                    'email' => $validated['contact_email'],
+                ]
+            );
 
-        if (! empty($validated['images'])) {
-            $this->deleteImages($kost);
-            $this->storeImages($kost, $validated['images']);
-        }
+            if (! empty($validated['images'])) {
+                $this->deleteImages($kost);
+                $this->storeImages($kost, $validated['images']);
+            }
 
-        $this->storeQrisImage($request, $kost);
-        $this->storeThumbnailImage($request, $kost);
-        $this->syncNearbyPlaces($kost, $validated['nearby_places'] ?? []);
+            $this->storeQrisImage($request, $kost);
+            $this->storeThumbnailImage($request, $kost);
+            $this->syncNearbyPlaces($kost, $validated['nearby_places'] ?? []);
+        });
 
         return redirect()
             ->route('owner.kosts.index')
@@ -132,6 +133,11 @@ class OwnerKostController extends Controller
 
     protected function validateKost(Request $request, bool $imageRequired): array
     {
+        $imageRules = ['nullable', 'array', 'max:8'];
+        if ($imageRequired) {
+            $imageRules = ['required', 'array', 'min:1', 'max:8'];
+        }
+
         return $request->validate([
             'nama_kost' => ['required', 'string', 'max:255'],
             'alamat' => ['required', 'string'],
@@ -161,7 +167,7 @@ class OwnerKostController extends Controller
             'nearby_places.*.category' => ['nullable', 'string', 'max:30'],
             'nearby_places.*.google_maps_link' => ['nullable', 'url', 'max:2048'],
             'nearby_places.*.distance_km' => ['required_with:nearby_places', 'numeric', 'min:0.1', 'max:999.99'],
-            'images' => ['nullable', 'array', 'min:1', 'max:8'],
+            'images' => $imageRules,
             'images.*' => ['image', 'max:2048'],
         ], [
             'payment_methods' => ['required', 'array', 'min:1'],
@@ -335,6 +341,7 @@ class OwnerKostController extends Controller
         collect($nearbyPlaces)
             ->filter(fn ($place) => ! empty($place['label']) && ! empty($place['distance_km']))
             ->each(fn ($place) => $kost->nearbyPlaces()->create([
+                'kost_id' => $kost->id,
                 'label' => (string) $place['label'],
                 'category' => (string) ($place['category'] ?? 'lainnya'),
                 'google_maps_link' => ! empty($place['google_maps_link']) ? (string) $place['google_maps_link'] : null,

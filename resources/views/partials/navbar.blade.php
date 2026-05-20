@@ -1,9 +1,7 @@
 <header class="sticky top-0 z-40 border-b border-[var(--line)] bg-[color:rgba(255,255,255,0.88)] backdrop-blur-xl">
     <div class="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <a href="{{ route('home') }}" class="flex items-center gap-3">
-            <div class="brand-mark">
-                KF
-            </div>
+            <img src="{{ asset('images/logo.png') }}" alt="KostFinder Logo" class="h-11 w-11 rounded-xl">
             <div>
                 <p class="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--terracotta-deep)]">Kost Booking</p>
                 <p class="text-xl font-bold text-[var(--ink)]">KostFinder</p>
