@@ -79,16 +79,50 @@
                 </div>
             </article>
 
-            @if ($nearbyPlaces->count())
+                @if ($nearbyPlaces->count())
                 <article class="content-card" data-reveal>
                     <h2 class="section-title">Dekat dengan</h2>
                     <div class="mt-5 grid gap-3 sm:grid-cols-2">
                         @foreach ($nearbyPlaces as $place)
+                            @php
+                                // origin: use kost's parsed location query (address or coordinates)
+                                $origin = $kost->google_maps_location_query;
+
+                                // destination: prefer lat/long, fallback to parsing place google_maps_link or label
+                                if (! empty($place->latitude) && ! empty($place->longitude)) {
+                                    $destination = $place->latitude.','.$place->longitude;
+                                } else {
+                                    $parsed = parse_url($place->google_maps_link ?? '');
+                                    $q = '';
+                                    if (isset($parsed['query'])) {
+                                        parse_str($parsed['query'], $qp);
+                                        $q = $qp['q'] ?? $qp['query'] ?? '';
+                                    }
+                                    if (! $q && isset($parsed['path']) && preg_match('/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/', $parsed['path'] ?? '', $m)) {
+                                        $q = $m[1].','.$m[2];
+                                    }
+                                    $destination = $q ?: ($place->label ?? '');
+                                }
+
+                                $directionsUrl = 'https://www.google.com/maps/dir/?api=1&origin='.rawurlencode($origin).'&destination='.rawurlencode($destination).'&travelmode=walking';
+                            @endphp
+
                             <div class="facility-tile">
-                                <span class="facility-icon" aria-hidden="true">✓</span>
-                                <div class="grid gap-0.5">
-                                    <span class="font-medium text-[var(--ink)]">{{ $place->label }}</span>
-                                    <span class="text-xs text-[var(--muted)]">{{ number_format((float) $place->distance_km, 1, ',', '.') }} km • {{ ucfirst($place->category) }}</span>
+                                <div class="flex items-center gap-3 w-full">
+                                    <span class="facility-icon" aria-hidden="true">✓</span>
+                                    <div class="min-w-0 w-full">
+                                        <div class="flex items-center gap-3">
+                                            <span class="font-medium text-[var(--ink)] truncate">{{ $place->label }}</span>
+                                            <span class="text-xs text-[var(--muted)]">{{ number_format((float) $place->distance_km, 1, ',', '.') }} km • {{ ucfirst($place->category) }}</span>
+                                        </div>
+
+                                        <div class="mt-1 flex items-center gap-3">
+                                            @if (! empty($place->google_maps_link))
+                                                <a href="{{ $place->google_maps_link }}" target="_blank" rel="noopener noreferrer" class="text-xs text-[var(--terracotta-deep)] hover:underline">Lihat</a>
+                                            @endif
+                                            <a href="{{ $directionsUrl }}" target="_blank" rel="noopener noreferrer" class="text-xs font-semibold text-[var(--terracotta-deep)] hover:underline">Rute</a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
