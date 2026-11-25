@@ -57,6 +57,13 @@
                         <a href="mailto:{{ $ownerEmail }}" class="rounded-2xl bg-[#fff1e7] px-5 py-3 text-center text-sm font-semibold text-[var(--terracotta-deep)] transition hover:opacity-90">
                             Kirim Email
                         </a>
+                        @if (auth()->check() && auth()->id() === $booking->user_id && $booking->payment_status !== \App\Models\Booking::PAYMENT_PAID && $booking->status !== \App\Models\Booking::STATUS_REJECTED)
+                            <form action="{{ route('bookings.destroy', $booking) }}" method="POST" onsubmit="return confirm('Batalkan booking ini?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="rounded-2xl bg-[#ffecec] px-5 py-3 text-center text-sm font-semibold text-[#c0392b] transition hover:opacity-90">Batalkan</button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             </article>

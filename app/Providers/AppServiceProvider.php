@@ -23,6 +23,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Temporary debug override: when running locally, force session driver to 'file'
+        // to avoid hitting the database for session storage during troubleshooting.
+        if (config('app.env') === 'local') {
+            config(['session.driver' => 'file']);
+        }
+
         if (str_starts_with((string) config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }

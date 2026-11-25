@@ -178,4 +178,43 @@ class BookingController extends Controller
 
         return back()->with('status', 'Status pembayaran berhasil diperbarui.');
     }
+
+    public function destroy(Request $request, Booking $booking): RedirectResponse
+    {
+        // Only the booking owner can cancel their booking
+        abort_unless($booking->user_id === $request->user()->id, 403, 'Anda tidak berhak membatalkan booking ini.');
+
+        if ($booking->status === Booking::STATUS_REJECTED) {
+            return back()->with('status', 'Booking ini sudah dibatalkan.');
+        }
+
+        if ($booking->payment_status === Booking::PAYMENT_PAID) {
+            return back()->with('status', 'Tidak dapat membatalkan booking yang sudah dibayar. Silakan hubungi owner.');
+        }
+
+        DB::transaction(function () use ($booking) {
+            $booking->loadMissing('kost.room');
+
+            // If booking was already accepted, free up the room
+            if ($booking->status === Booking::STATUS_ACCEPTED) {
+                $room = $booking->kost->room;
+                if ($room) {
+                    $room->increment('kamar_tersedia');
+                }
+            }
+
+            $booking->update([
+                'status' => Booking::STATUS_REJECTED,
+            ]);
+
+            $booking->paymentLogs()->create([
+                'user_id' => $booking->user_id,
+                'type' => 'cancelled_by_user',
+                'data' => null,
+                'created_at' => now(),
+            ]);
+        });
+
+        return back()->with('status', 'Booking berhasil dibatalkan.');
+    }
 }

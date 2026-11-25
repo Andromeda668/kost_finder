@@ -30,6 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/kosts/{kost}/favorite', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
     Route::get('/kosts/{kost}/booking', [BookingController::class, 'create'])->name('bookings.create');
     Route::post('/kosts/{kost}/booking', [BookingController::class, 'store'])->name('bookings.store');
+    Route::delete('/bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
 });
 
 Route::prefix('owner')->name('owner.')->middleware(['auth', 'owner'])->group(function () {

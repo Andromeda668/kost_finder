@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Log;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -47,6 +48,19 @@ class AuthenticatedSessionController extends Controller
 
     public function destroy(Request $request): RedirectResponse
     {
+        // Debug: log incoming request details to help diagnose 419/CSRF issues.
+        Log::debug('Logout request debug', [
+            'input' => $request->all(),
+            'cookies' => $request->cookies->all(),
+            'session_cookie' => $request->cookie(session()->getName()),
+            'session_id' => $request->session()->getId(),
+            'headers' => [
+                'host' => $request->header('host'),
+                'referer' => $request->header('referer'),
+                'user-agent' => $request->header('user-agent'),
+            ],
+        ]);
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

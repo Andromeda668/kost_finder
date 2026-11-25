@@ -82,6 +82,19 @@ class OwnerKostController extends Controller
     {
         $this->authorizeOwner($request, $kost);
 
+        // Ensure array inputs fall back to existing values when not present in the request
+        if (! $request->has('payment_methods')) {
+            $request->merge(['payment_methods' => $kost->payment_methods ?? []]);
+        }
+
+        if (! $request->has('payment_details')) {
+            $request->merge(['payment_details' => $kost->payment_details ?? []]);
+        }
+
+        if (! $request->has('fasilitas_items')) {
+            $request->merge(['fasilitas_items' => preg_split('/\r\n|\r|\n/', (string) $kost->fasilitas) ?: []]);
+        }
+
         $validated = $this->validateKost($request, false);
 
         DB::transaction(function () use ($request, $validated, $kost) {
