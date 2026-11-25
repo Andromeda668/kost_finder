@@ -1,2 +1,6 @@
 *
 !.gitignore
+!kost/
+kost/*
+!kost/*.jpg
+!kost/SUMBER-FOTO.md
